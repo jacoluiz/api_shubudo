@@ -1,6 +1,6 @@
 import express from "express";
 import conectaNoBanco from "./config/dbConnect.js";
-import programacao from "./models/programacaoModel.js";
+import routes from "./routes/index.js";
 
 const conexao = await conectaNoBanco();
 
@@ -13,25 +13,11 @@ conexao.once("open", () => {
 });
 
 const app = express();
-app.use(express.json());
-
-app.get("/", (req, res) => {
-    res.status(200).send("Teste de ex");
-});
-
-app.get("/programacao", async (req, res) => {
-    const listaProgramacao = await programacao.find({});
-    res.status(200).json(listaProgramacao);
-});
+routes(app);
 
 app.get("/programacao/:id", (req, res) => {
     const index = buscaFaixa(req.params.id);
     res.status(200).json(faixas[index]);
-});
-
-app.post("/programacao", (req, res) => {
-    faixas.push(req.body);
-    res.status(201).send("programacao adicionada");
 });
 
 app.put("/programacao/:id", (req, res) => {
