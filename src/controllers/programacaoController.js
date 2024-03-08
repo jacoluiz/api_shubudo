@@ -8,7 +8,7 @@ class programacaoController {
         }
         catch (erro) {
             res.status(500).json({
-                message: `${erro.message}`
+                message: `${erro.message} - Erro ao listar programação`
             })
         }
     };
