@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const programacaoSchema = new mongoose.Schema({
     id: { type: mongoose.Schema.Types.ObjectId },
-    faixa: { type: String, require: true },
+    faixa: { type: mongoose.Schema.Types.ObjectId, ref: 'faixa', required: true },
     defesa: { type: String },
     ataquesDeMao: { type: String },
     chutes: { type: String },
