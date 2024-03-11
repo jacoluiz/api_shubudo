@@ -2,14 +2,19 @@ import mongoose from "mongoose";
 
 const movimentoPadraoSchema = new mongoose.Schema({
     id: { type: mongoose.Schema.Types.ObjectId },
-    tipo: { type: String, require: true },
     faixaCorespondente: { type: String, require: true },
     base: { type: String, require: true },
     nome: { type: String, require: true },
-    observacao: { type: String },
+    observacao: { type: [String] },
 
 }, { versionKey: false });
 
-const movimentoPadrao = mongoose.model("movimentoPadrao", movimentoPadraoSchema);
+const chute = mongoose.model('chute', movimentoPadraoSchema);
+const ataqueMao = mongoose.model('ataque_de_mao', movimentoPadraoSchema);
+const defesa = mongoose.model('defesa', movimentoPadraoSchema);
 
-export default movimentoPadrao;
+export {
+    chute,
+    ataqueMao,
+    defesa
+};

@@ -1,23 +1,23 @@
-import faixa from "../models/faixasModel.js";
+import { chute } from "../models/movimentoPadraoModel.js";
 
-class faixaController {
-    static async listarFaixas(req, res) {
+class chuteController {
+    static async listarChutes(req, res) {
         try {
-            const listaFaixas = await faixa.find({});
-            res.status(200).json(listaFaixas);
+            const listaChutes = await chute.find({});
+            res.status(200).json(listaChutes);
         }
         catch (erro) {
             res.status(500).json({
-                message: `${erro.message} - Erro ao listar programação`
+                message: `${erro.message} - Erro ao listar chutes`
             })
         }
     };
 
-    static async listarFaixaPorCor(req, res) {
-        const faixaSolicitada = req.query.faixa;
+    static async listarChutePorCor(req, res) {
+        const faixa = req.query.faixaCorespondente;
         try {
-            const faixaEncontrada = await faixa.find({ faixa: faixaSolicitada });
-            res.status(200).json(faixaEncontrada);
+            const chutesDaFaixa = await chute.find({ faixaCorespondente: faixa });
+            res.status(200).json(chutesDaFaixa);
         }
         catch (erro) {
             res.status(500).json({
@@ -26,9 +26,9 @@ class faixaController {
         }
     };
 
-    static async atualizarFaixa(req, res) {
+    static async atualizarChute(req, res) {
         try {
-            await faixa.findByIdAndUpdate(req.params.id, req.body);
+            await chute.findByIdAndUpdate(req.params.id, req.body);
             res.status(200).json({ message: "Atualizado com sucesso" });
         }
         catch (erro) {
@@ -38,9 +38,9 @@ class faixaController {
         }
     }
 
-    static async excluirFaixa(req, res) {
+    static async excluirChute(req, res) {
         try {
-            await faixa.findByIdAndDelete(req.params.id);
+            await chute.findByIdAndDelete(req.params.id);
             res.status(200).json({ message: "Excluído com sucesso" });
         }
         catch (erro) {
@@ -50,12 +50,12 @@ class faixaController {
         }
     }
 
-    static async cadastrarFaixa(req, res) {
+    static async cadastrarChute(req, res) {
         try {
-            const novaFaixa = await faixa.create(req.body);
+            const novoChute = await chute.create(req.body);
             res.status(201).json({
                 message: "Criado com sucesso",
-                Faixa: novaFaixa
+                Chute: novoChute
             });
         }
         catch (erro) {
@@ -66,4 +66,4 @@ class faixaController {
     }
 }
 
-export default faixaController
+export default chuteController
