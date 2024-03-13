@@ -9,12 +9,13 @@ const movimentoPadraoSchema = new mongoose.Schema({
 
 }, { versionKey: false });
 
-const chute = mongoose.model('chute', movimentoPadraoSchema);
-const ataqueMao = mongoose.model('ataque_de_mao', movimentoPadraoSchema);
-const defesa = mongoose.model('defesa', movimentoPadraoSchema);
+const chute = mongoose.model('chutes', movimentoPadraoSchema);
+const ataqueMao = mongoose.model('ataques_de_maos', movimentoPadraoSchema);
+const defesa = mongoose.model('defesas', movimentoPadraoSchema);
 
 export {
     chute,
     ataqueMao,
-    defesa
+    defesa,
+    movimentoPadraoSchema
 };

@@ -1,0 +1,15 @@
+import mongoose from "mongoose";
+import { movimentoPadraoSchema } from "./movimentoPadraoModel.js";
+
+const kataSchema = new mongoose.Schema({
+    id: { type: mongoose.Schema.Types.ObjectId },
+    faixa: { type: String, require: true },
+    orden: { type: Number, },
+    quantidadeMovimentos: { type: Number, },
+    movimentos: [movimentoPadraoSchema]
+
+}, { versionKey: false });
+
+const kata = mongoose.model("katas", kataSchema);
+
+export default kata;
