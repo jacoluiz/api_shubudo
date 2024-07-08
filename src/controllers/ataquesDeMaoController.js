@@ -55,7 +55,7 @@ class ataqueDeMaoController {
             const novoAtaqueDeMao = await ataqueMao.create(req.body);
             res.status(201).json({
                 message: "Criado com sucesso",
-                Chute: novoAtaqueDeMao
+                Ataque_de_mãos: novoAtaqueDeMao
             });
         }
         catch (erro) {

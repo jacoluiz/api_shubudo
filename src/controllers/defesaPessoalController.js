@@ -55,7 +55,7 @@ class defesaPessoalController {
             const novaDefesa = await sequenciaDeCombate.create(req.body);
             res.status(201).json({
                 message: "Criado com sucesso",
-                Chute: novaDefesa
+                Defesa_pessoal: novaDefesa
             });
         }
         catch (erro) {

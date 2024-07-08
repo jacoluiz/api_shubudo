@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const movimentoPadraoSchema = new mongoose.Schema({
     id: { type: mongoose.Schema.Types.ObjectId },
     faixaCorespondente: { type: String, require: true },
+    tipoMovimento: {type: String, require: true},
     base: { type: String, require: true },
     nome: { type: String, require: true },
     observacao: { type: [String] },
