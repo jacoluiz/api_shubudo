@@ -14,9 +14,9 @@ class ataqueDeMaoController {
     };
 
     static async listarAtaquesDeMaoPorCor(req, res) {
-        const faixa = req.query.faixaCorespondente;
+        const faixa = req.query.faixa;
         try {
-            const AtaquesDeMaoDaFaixa = await ataqueMao.find({ faixaCorespondente: faixa });
+            const AtaquesDeMaoDaFaixa = await ataqueMao.find({ faixa: faixa });
             res.status(200).json(AtaquesDeMaoDaFaixa);
         }
         catch (erro) {
