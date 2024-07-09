@@ -14,9 +14,9 @@ class defesaController {
     };
 
     static async listarDefesasPorCor(req, res) {
-        const faixa = req.query.faixaCorespondente;
+        const faixa = req.query.faixa;
         try {
-            const defesasDaFaixa = await defesa.find({ faixaCorespondente: faixa });
+            const defesasDaFaixa = await defesa.find({ faixa: faixa });
             res.status(200).json(defesasDaFaixa);
         }
         catch (erro) {

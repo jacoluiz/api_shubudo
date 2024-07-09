@@ -14,7 +14,7 @@ class kataController {
     };
 
     static async listarKataPorCor(req, res) {
-        const faixa = req.query.faixaCorespondente;
+        const faixa = req.query.faixa;
         try {
             const katasDaFaixa = await kata.find({ faixa: faixa });
             res.status(200).json(katasDaFaixa);
