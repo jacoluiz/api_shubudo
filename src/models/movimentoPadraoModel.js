@@ -1,3 +1,4 @@
+import { type } from "express/lib/response";
 import mongoose from "mongoose";
 
 const movimentoPadraoSchema = new mongoose.Schema({
@@ -6,6 +7,7 @@ const movimentoPadraoSchema = new mongoose.Schema({
     tipoMovimento: {type: String, require: true},
     base: { type: String, require: true },
     nome: { type: String, require: true },
+    ordem: {type: String, require: false},
     observacao: { type: [String] },
 
 }, { versionKey: false });
