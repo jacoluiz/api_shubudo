@@ -1,4 +1,4 @@
-import { chute, ataqueMao, defesa } from '../models/movimentoPadraoModel';
+import { chute, ataqueMao, defesa } from '../models/movimentoPadraoModel.js';
 
 class MovimentoController {
     static async atualizarMovimentos(req, res) {

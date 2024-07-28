@@ -1,5 +1,5 @@
 import express from "express";
-import programacao from "./programacaoRoutes.js"
+import movimento from "./movimentoRoutes.js"
 import faixa from "./faixaRoutes.js"
 import chute from "./chuteRoutes.js"
 import ataqueDeMao from "./ataqueMaoRoutes.js"
@@ -9,7 +9,7 @@ import sequenciaDeCombate from "./sequenciaDeCombateRoutes.js"
 import kata from "./kataRoutes.js"
 
 const routes = (app) => {
-    app.use(express.json(), programacao);
+    app.use(express.json(), movimento);
     app.use(express.json(), faixa);
     app.use(express.json(), chute);
     app.use(express.json(), ataqueDeMao);
