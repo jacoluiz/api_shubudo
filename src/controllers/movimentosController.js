@@ -13,7 +13,7 @@ class MovimentoController {
                     case 'Chute':
                         model = chute;
                         break;
-                    case 'Ataque de Mão':
+                    case 'Ataque de mão':
                         model = ataqueMao;
                         break;
                     case 'Defesa':
