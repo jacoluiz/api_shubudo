@@ -6,6 +6,8 @@ const movimentoPadraoSchema = new mongoose.Schema({
     tipoMovimento: {type: String, require: true},
     base: { type: String, require: true },
     nome: { type: String, require: true },
+    ordem: {type: String, require: false},
+    descricao: { type: String, require: true },
     observacao: { type: [String] },
 
 }, { versionKey: false });
