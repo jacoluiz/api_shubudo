@@ -3,7 +3,7 @@ import { chute, ataqueMao, defesa } from '../models/movimentoPadraoModel.js';
 class MovimentoController {
     static async atualizarMovimentos(req, res) {
         try {
-            const updates = req.body; // Supondo que o corpo da requisição seja um array de objetos
+            const updates = req.body;
 
             const updatePromises = updates.map(update => {
                 const { _id, tipoMovimento, ...rest } = update;
