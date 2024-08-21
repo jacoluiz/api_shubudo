@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const faixasSchema = new mongoose.Schema({
     id: { type: mongoose.Schema.Types.ObjectId },
     faixa: { type: String, require: true },
-    orden: { type: Number, },
+    ordem: { type: Number, },
     dan: { type: Number, }
 
 }, { versionKey: false });
