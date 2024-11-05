@@ -6,7 +6,9 @@ const kataSchema = new mongoose.Schema({
     faixa: { type: String, require: true },
     ordem: { type: Number, },
     quantidadeMovimentos: { type: Number, },
-    movimentos: [movimentoPadraoSchema]
+    movimentos: [movimentoPadraoSchema],
+    video:{ type: String, },
+    temposVideo:[Number] 
 
 }, { versionKey: false });
 
