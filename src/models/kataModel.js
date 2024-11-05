@@ -7,8 +7,18 @@ const kataSchema = new mongoose.Schema({
     ordem: { type: Number, },
     quantidadeMovimentos: { type: Number, },
     movimentos: [movimentoPadraoSchema],
-    video:{ type: String, },
-    temposVideo:[Number] 
+    video: [
+        {
+            orientacao: { type: String, enum: ['frente', 'esquerda', 'direita', 'costas'], required: true },
+            url: { type: String, required: true }
+        }
+    ],
+    temposVideos: [
+        {
+            descricao: { type: String, enum: ['frente', 'esquerda', 'direita', 'costas'], required: true },
+            tempo: { type: [Number], required: true }
+        }
+    ]
 
 }, { versionKey: false });
 
