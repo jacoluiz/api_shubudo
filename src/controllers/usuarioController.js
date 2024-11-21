@@ -66,19 +66,37 @@ class UsuarioController {
 
     static async cadastrarUsuario(req, res) {
         try {
-            const { username } = req.body;
-
+            const { username, senha, ...resto } = req.body;
+    
             // Verifica se o nome de usuário já existe
             const usuarioExistente = await Usuario.findOne({ username });
             if (usuarioExistente) {
                 return res.status(400).json({ message: "Nome de usuário já está em uso." });
             }
-
-            const novoUsuario = new Usuario(req.body);
+    
+            // Gera o hash da senha
+            const salt = await bcrypt.genSalt(10);
+            const senhaCriptografada = await bcrypt.hash(senha, salt);
+    
+            // Cria o novo usuário com a senha criptografada
+            const novoUsuario = new Usuario({
+                ...resto,
+                username,
+                senha: senhaCriptografada
+            });
+    
             await novoUsuario.save();
             res.status(201).json({
                 message: "Usuário criado com sucesso.",
-                usuario: novoUsuario
+                usuario: {
+                    id: novoUsuario._id,
+                    nome: novoUsuario.nome,
+                    username: novoUsuario.username,
+                    email: novoUsuario.email,
+                    corFaixa: novoUsuario.corFaixa,
+                    peso: novoUsuario.peso,
+                    altura: novoUsuario.altura
+                }
             });
         } catch (erro) {
             res.status(500).json({ message: `${erro.message} - Erro ao cadastrar usuário.` });
