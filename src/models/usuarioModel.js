@@ -7,6 +7,8 @@ const usuarioSchema = new mongoose.Schema({
     senha: { type: String, required: true },
     peso: { type: String },
     altura: { type: String },
+    idade: { type: String },
+    perfil: { type: String, default: "básico"},
     corFaixa: { type: String }
 }, { versionKey: false });
 
