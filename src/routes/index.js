@@ -7,6 +7,8 @@ import defesa from "./defesaRoutes.js"
 import defesaPessoal from "./defesaPessoalRoutes.js"
 import sequenciaDeCombate from "./sequenciaDeCombateRoutes.js"
 import kata from "./kataRoutes.js"
+import usuario from "./usuarioRoutes.js"
+
 
 const routes = (app) => {
     app.use(express.json(), movimento);
@@ -17,6 +19,7 @@ const routes = (app) => {
     app.use(express.json(), defesaPessoal);
     app.use(express.json(), sequenciaDeCombate);
     app.use(express.json(), kata);
+    app.use(express.json(), usuario)
 };
 
 export default routes;
