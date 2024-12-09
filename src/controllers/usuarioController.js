@@ -9,38 +9,44 @@ class UsuarioController {
 
     static async login(req, res) {
         const { username, email, senha } = req.body;
-
+    
         try {
             // Buscar usuário por e-mail ou nome de usuário
             const usuario = await Usuario.findOne({
                 $or: [{ username }, { email }]
             });
-
+    
             if (!usuario) {
                 return res.status(404).json({ message: "Usuário não encontrado." });
             }
-
+    
             // Validar senha
             const senhaValida = await bcrypt.compare(senha, usuario.senha);
             if (!senhaValida) {
                 return res.status(401).json({ message: "Credenciais inválidas." });
             }
-
+    
             // Gerar token JWT
             const token = jwt.sign(
                 { id: usuario._id, username: usuario.username, email: usuario.email },
                 SECRET_KEY,
                 { expiresIn: "24h" } // Token válido por 1 hora
             );
-
+    
+            // Exclui a senha do objeto retornado para segurança
+            const usuarioResponse = { ...usuario.toObject() };
+            delete usuarioResponse.senha;
+    
             res.status(200).json({
                 message: "Login realizado com sucesso.",
-                token
+                token,
+                usuario: usuarioResponse // Inclui o objeto do usuário na resposta
             });
         } catch (erro) {
             res.status(500).json({ message: `${erro.message} - Erro ao realizar login.` });
         }
     }
+    
 
     static async listarUsuarios(req, res) {
         try {
