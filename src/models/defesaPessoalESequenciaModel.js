@@ -10,9 +10,11 @@ const defesaPessoalESequenciaSchema = new mongoose.Schema({
 
 const defesaPessoal = mongoose.model("defesas_pessoais", defesaPessoalESequenciaSchema);
 const sequenciaDeCombate = mongoose.model("sequencias_de_combates", defesaPessoalESequenciaSchema);
+const defesaPessoalExtraBanner = mongoose.model("defesas_pessoais_extra_banner", defesaPessoalESequenciaSchema);
 
 
 export {
     defesaPessoal,
-    sequenciaDeCombate
+    sequenciaDeCombate,
+    defesaPessoalExtraBanner
 };
