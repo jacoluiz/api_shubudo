@@ -1,5 +1,5 @@
 import express from "express";
-import DefesaPessoalExtraBannerController from "../controllers/defesaPessoalExtraBannerController.js";
+import DefesaPessoalExtraBannerController from "../controllers/defesaExtraBannerController.js";
 
 const router = express.Router();
 

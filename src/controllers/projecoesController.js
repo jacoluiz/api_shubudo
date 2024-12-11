@@ -1,10 +1,10 @@
-import Projecao from "../models/projecaoModel.js";
+import projecao from "../models/projecoesModel.js";
 
 class ProjecaoController {
     // Criar uma projeção
     static async criar(req, res) {
         try {
-            const novaProjecao = new Projecao(req.body);
+            const novaProjecao = new projecao(req.body);
             await novaProjecao.save();
             res.status(201).json({
                 message: "Projeção criada com sucesso.",
@@ -20,7 +20,7 @@ class ProjecaoController {
     // Listar todas as projeções
     static async listar(req, res) {
         try {
-            const projecoes = await Projecao.find().populate("faixa");
+            const projecoes = await projecao.find().populate("faixa");
             res.status(200).json(projecoes);
         } catch (error) {
             res.status(500).json({
@@ -32,7 +32,7 @@ class ProjecaoController {
     // Buscar projeção por ID
     static async buscarPorId(req, res) {
         try {
-            const projecao = await Projecao.findById(req.params.id).populate("faixa");
+            const projecao = await projecao.findById(req.params.id).populate("faixa");
             if (projecao) {
                 res.status(200).json(projecao);
             } else {
@@ -48,7 +48,7 @@ class ProjecaoController {
     // Atualizar uma projeção
     static async atualizar(req, res) {
         try {
-            const projecaoAtualizada = await Projecao.findByIdAndUpdate(
+            const projecaoAtualizada = await projecao.findByIdAndUpdate(
                 req.params.id,
                 req.body,
                 { new: true }
@@ -71,7 +71,7 @@ class ProjecaoController {
     // Excluir uma projeção
     static async excluir(req, res) {
         try {
-            const projecaoExcluida = await Projecao.findByIdAndDelete(req.params.id);
+            const projecaoExcluida = await projecao.findByIdAndDelete(req.params.id);
             if (projecaoExcluida) {
                 res.status(200).json({ message: "Projeção excluída com sucesso." });
             } else {

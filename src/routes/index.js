@@ -8,6 +8,8 @@ import defesaPessoal from "./defesaPessoalRoutes.js"
 import sequenciaDeCombate from "./sequenciaDeCombateRoutes.js"
 import kata from "./kataRoutes.js"
 import usuario from "./usuarioRoutes.js"
+import defesaPessoalExtraBanner from "./defesaExtraBannerRoutes.js";
+import projecoes from "./projecoesRoutes.js";
 
 
 const routes = (app) => {
@@ -19,7 +21,9 @@ const routes = (app) => {
     app.use(express.json(), defesaPessoal);
     app.use(express.json(), sequenciaDeCombate);
     app.use(express.json(), kata);
-    app.use(express.json(), usuario)
+    app.use(express.json(), usuario);
+    app.use(express.json(), defesaPessoalExtraBanner);
+    app.use(express.json(), projecoes);
 };
 
 export default routes;
