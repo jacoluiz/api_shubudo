@@ -4,10 +4,10 @@ import DefesaPessoalExtraBannerController from "../controllers/defesaPessoalExtr
 const router = express.Router();
 
 // Rotas para Defesa Pessoal Extra Banner
-router.post("/defesas-pessoais-extra-banner", DefesaPessoalExtraBannerController.criar);
-router.get("/defesas-pessoais-extra-banner", DefesaPessoalExtraBannerController.listar);
-router.get("/defesas-pessoais-extra-banner/:id", DefesaPessoalExtraBannerController.buscarPorId);
-router.put("/defesas-pessoais-extra-banner/:id", DefesaPessoalExtraBannerController.atualizar);
-router.delete("/defesas-pessoais-extra-banner/:id", DefesaPessoalExtraBannerController.excluir);
+router.post("/defesasPessoaisExtraBanner", DefesaPessoalExtraBannerController.criar);
+router.get("/defesasPessoaisExtraBanner", DefesaPessoalExtraBannerController.listar);
+router.get("/defesasPessoaisExtraBanner/:id", DefesaPessoalExtraBannerController.buscarPorId);
+router.put("/defesasPessoaisExtraBanner/:id", DefesaPessoalExtraBannerController.atualizar);
+router.delete("/defesasPessoaisExtraBanner/:id", DefesaPessoalExtraBannerController.excluir);
 
 export default router;
