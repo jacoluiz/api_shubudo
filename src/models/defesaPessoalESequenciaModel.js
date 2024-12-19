@@ -3,7 +3,7 @@ import { movimentoPadraoSchema } from "./movimentoPadraoModel.js";
 
 const defesaPessoalESequenciaSchema = new mongoose.Schema({
     id: { type: mongoose.Schema.Types.ObjectId },
-    faixa: { type: mongoose.Schema.Types.ObjectId, ref: 'faixa', required: true },
+    faixa: { type: String, required: true },
     numeroOrdem: { type: Number, required: true },
     movimentos: [movimentoPadraoSchema]
 }, { versionKey: false });
