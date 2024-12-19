@@ -8,7 +8,7 @@ const projecaoSchema = new mongoose.Schema(
         descricao: { type: String, required: true },
         observacao: { type: [String], default: [] },
         ordem: { type: Number, required: true },
-        faixa: { type: mongoose.Schema.Types.ObjectId, ref: 'faixa', required: true },
+        faixa: { type: String, required: true },
     },
     { versionKey: false }
 );
