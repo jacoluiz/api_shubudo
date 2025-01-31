@@ -35,7 +35,6 @@ class UsuarioController {
     
             // Exclui a senha do objeto retornado para segurança
             const usuarioResponse = { ...usuario.toObject() };
-            delete usuarioResponse.senha;
     
             res.status(200).json({
                 message: "Login realizado com sucesso.",
