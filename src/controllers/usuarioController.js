@@ -100,7 +100,7 @@ class UsuarioController {
     static async atualizarUsuario(req, res) {
         try {
             const { id } = req.params;
-
+    
             // Verifica se o nome de usuário é único, caso esteja sendo atualizado
             if (req.body.username) {
                 const usuarioExistente = await Usuario.findOne({ username: req.body.username });
@@ -108,13 +108,27 @@ class UsuarioController {
                     return res.status(400).json({ message: "Nome de usuário já está em uso." });
                 }
             }
-
-            await Usuario.findByIdAndUpdate(id, req.body, { new: true });
-            res.status(200).json({ message: "Usuário atualizado com sucesso." });
+    
+            // Usa { new: true } para retornar o documento após a atualização
+            const usuarioAtualizado = await Usuario.findByIdAndUpdate(id, req.body, { new: true });
+    
+            if (!usuarioAtualizado) {
+                return res.status(404).json({ message: "Usuário não encontrado." });
+            }
+    
+            // Se quiser remover a senha do objeto antes de enviar:
+            const usuarioResponse = usuarioAtualizado.toObject();
+            if (usuarioResponse.senha) {
+                delete usuarioResponse.senha;
+            }
+    
+            // Retorna o usuário atualizado no response
+            res.status(200).json(usuarioResponse);
         } catch (erro) {
             res.status(500).json({ message: `${erro.message} - Erro ao atualizar usuário.` });
         }
     }
+    
 
     static async excluirUsuario(req, res) {
         try {
