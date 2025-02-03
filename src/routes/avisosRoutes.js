@@ -1,5 +1,5 @@
 import express from "express";
-import AvisoController from "../controllers/avisoController.js";
+import AvisoController from "../controllers/avisosController.js";
 
 const routes = express.Router();
 
