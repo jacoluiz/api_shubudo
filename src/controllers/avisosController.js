@@ -1,4 +1,4 @@
-import Aviso from "../models/avisoModel.js";
+import Aviso from "../models/avisosModel.js";
 
 class AvisoController {
   // Listar todos os avisos
