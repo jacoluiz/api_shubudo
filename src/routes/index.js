@@ -10,6 +10,7 @@ import kata from "./kataRoutes.js"
 import usuario from "./usuarioRoutes.js"
 import defesaPessoalExtraBanner from "./defesaExtraBannerRoutes.js";
 import projecoes from "./projecoesRoutes.js";
+import aviso from "./avisosRoutes.js";
 
 
 const routes = (app) => {
@@ -24,6 +25,7 @@ const routes = (app) => {
     app.use(express.json(), usuario);
     app.use(express.json(), defesaPessoalExtraBanner);
     app.use(express.json(), projecoes);
+    app.use(express.json(), aviso);
 };
 
 export default routes;
