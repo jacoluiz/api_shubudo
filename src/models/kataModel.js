@@ -9,13 +9,13 @@ const kataSchema = new mongoose.Schema({
     movimentos: [movimentoPadraoSchema],
     video: [
         {
-            orientacao: { type: String, enum: ['frente', 'esquerda', 'direita', 'costas'], required: true },
+            orientacao: { type: String, enum: ['FRENTE', 'ESQUERDA', 'DIREITA', 'COSTAS'], required: true },
             url: { type: String, required: true }
         }
     ],
     temposVideos: [
         {
-            descricao: { type: String, enum: ['frente', 'esquerda', 'direita', 'costas'], required: true },
+            descricao: { type: String, enum: ['FRENTE', 'ESQUERDA', 'DIREITA', 'COSTAS'], required: true },
             tempo: { type: [Number], required: true }
         }
     ]
