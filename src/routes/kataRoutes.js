@@ -8,7 +8,8 @@ routes.get("/kata/busca", kataController.listarKataPorCor);
 
 routes.post("/kata", kataController.cadastrarKata);
 
-routes.put("/kata/:id", kataController.atualizarKata);
+// Alterado: rota PUT sem o parâmetro ":id"
+routes.put("/kata", kataController.atualizarKata);
 
 routes.delete("/kata/:id", kataController.excluirKata);
 
