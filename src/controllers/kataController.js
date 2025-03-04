@@ -27,7 +27,7 @@ class kataController {
     static async atualizarKata(req, res) {
         try {
             // Espera que o body seja um array de objetos,
-            // onde cada objeto possui um "id" e os campos a serem atualizados.
+            // onde cada objeto possui um "_id" e os campos a serem atualizados.
             const kataUpdates = req.body;
 
             if (!Array.isArray(kataUpdates)) {
@@ -37,12 +37,12 @@ class kataController {
             // Atualiza todos os katas em paralelo utilizando Promise.all
             const results = await Promise.all(
                 kataUpdates.map(async (updateObj) => {
-                    const { id, ...updateFields } = updateObj;
-                    if (!id) {
-                        throw new Error('Cada objeto de atualização deve conter o campo "id".');
+                    const { _id, ...updateFields } = updateObj;
+                    if (!_id) {
+                        throw new Error('Cada objeto de atualização deve conter o campo "_id".');
                     }
                     // Atualiza o kata e retorna o documento atualizado (opção { new: true } para retornar o documento novo)
-                    return await kata.findByIdAndUpdate(id, updateFields, { new: true });
+                    return await kata.findByIdAndUpdate(_id, updateFields, { new: true });
                 })
             );
 
