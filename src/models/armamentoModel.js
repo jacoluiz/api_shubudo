@@ -6,7 +6,8 @@ const armamentoSchema = new mongoose.Schema({
     arma: { type: String, required: true }, // Campo adicional para o armamento
     faixa: { type: String, required: true },
     numeroOrdem: { type: Number, required: true },
-    movimentos: [movimentoPadraoSchema]
+    movimentos: [movimentoPadraoSchema],
+    video: { type: String }
 }, { versionKey: false });
 
 const armamento = mongoose.model("armamentos", armamentoSchema);
