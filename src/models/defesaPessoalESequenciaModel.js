@@ -12,7 +12,6 @@ const defesaPessoal = mongoose.model("defesas_pessoais", defesaPessoalESequencia
 const sequenciaDeCombate = mongoose.model("sequencias_de_combates", defesaPessoalESequenciaSchema);
 const defesaPessoalExtraBanner = mongoose.model("defesas_pessoais_extra_banner", defesaPessoalESequenciaSchema);
 
-
 export {
     defesaPessoal,
     sequenciaDeCombate,

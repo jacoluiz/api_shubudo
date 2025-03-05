@@ -11,6 +11,7 @@ import usuario from "./usuarioRoutes.js"
 import defesaPessoalExtraBanner from "./defesaExtraBannerRoutes.js";
 import projecoes from "./projecoesRoutes.js";
 import aviso from "./avisosRoutes.js";
+import armamento from "./armamentoRoutes.js";
 
 
 const routes = (app) => {
@@ -26,6 +27,7 @@ const routes = (app) => {
     app.use(express.json(), defesaPessoalExtraBanner);
     app.use(express.json(), projecoes);
     app.use(express.json(), aviso);
+    app.use(express.json(), armamento)
 };
 
 export default routes;
