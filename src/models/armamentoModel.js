@@ -15,5 +15,5 @@ const defesasDeArmas = mongoose.model("defesas_de_armas", armamentoSchema);
 
 export {
     armamento,
-    defesaDeArmas
+    defesasDeArmas
 };
