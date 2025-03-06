@@ -1,10 +1,10 @@
-import { defesaDeArmas } from "../models/armamentoModel.js";
+import { defesasDeArmas } from "../models/armamentoModel.js";
 
 class DefesaDeArmasController {
     // Listar todas as defesas
     static async listarDefesas(req, res) {
         try {
-            const lista = await defesaDeArmas.find({});
+            const lista = await defesasDeArmas.find({});
             res.status(200).json(lista);
         } catch (erro) {
             res.status(500).json({
@@ -17,7 +17,7 @@ class DefesaDeArmasController {
     static async listarDefesaPorFaixa(req, res) {
         const faixa = req.query.faixa;
         try {
-            const defesas = await defesaDeArmas.find({ faixa: faixa });
+            const defesas = await defesasDeArmas.find({ faixa: faixa });
             res.status(200).json(defesas);
         } catch (erro) {
             res.status(500).json({
@@ -39,7 +39,7 @@ class DefesaDeArmasController {
                     if (!_id) {
                         throw new Error('Cada objeto de atualização deve conter o campo "_id".');
                     }
-                    return await defesaDeArmas.findByIdAndUpdate(_id, updateFields, { new: true });
+                    return await defesasDeArmas.findByIdAndUpdate(_id, updateFields, { new: true });
                 })
             );
             res.status(200).json({ message: 'Defesas de armas atualizadas com sucesso', data: results });
@@ -51,7 +51,7 @@ class DefesaDeArmasController {
     // Excluir uma defesa
     static async excluirDefesa(req, res) {
         try {
-            await defesaDeArmas.findByIdAndDelete(req.params.id);
+            await defesasDeArmas.findByIdAndDelete(req.params.id);
             res.status(200).json({ message: "Excluído com sucesso" });
         } catch (erro) {
             res.status(500).json({
@@ -63,7 +63,7 @@ class DefesaDeArmasController {
     // Cadastrar uma nova defesa
     static async cadastrarDefesa(req, res) {
         try {
-            const novo = await defesaDeArmas.create(req.body);
+            const novo = await defesasDeArmas.create(req.body);
             res.status(201).json({
                 message: "Criado com sucesso",
                 defesa: novo
