@@ -1,4 +1,4 @@
-import { defesaDeArmas } from "../models/defesaDeArmasModel.js";
+import { defesaDeArmas } from "../models/armamentoModel.js";
 
 class DefesaDeArmasController {
     // Listar todas as defesas
