@@ -1,5 +1,5 @@
 import express from "express";
-import DefesaDeArmasController from "../controllers/defesaDeArmasController.js";
+import DefesaDeArmasController from "../controllers/defesasDeArmasController.js";
 
 const router = express.Router();
 
