@@ -12,7 +12,7 @@ import defesaPessoalExtraBanner from "./defesaExtraBannerRoutes.js";
 import projecoes from "./projecoesRoutes.js";
 import aviso from "./avisosRoutes.js";
 import armamento from "./armamentoRoutes.js";
-
+import defesasDeArma from "./defesasDeArmasRoutes.js"
 
 const routes = (app) => {
     app.use(express.json(), movimento);
@@ -28,6 +28,7 @@ const routes = (app) => {
     app.use(express.json(), projecoes);
     app.use(express.json(), aviso);
     app.use(express.json(), armamento)
+    app.use(express.json(), defesasDeArma)
 };
 
 export default routes;
