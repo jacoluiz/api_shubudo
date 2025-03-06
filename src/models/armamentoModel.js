@@ -11,5 +11,9 @@ const armamentoSchema = new mongoose.Schema({
 }, { versionKey: false });
 
 const armamento = mongoose.model("armamentos", armamentoSchema);
+const defesasDeArmas = mongoose.model("defesas_de_armas", armamentoSchema);
 
-export { armamento };
+export {
+    armamento,
+    defesaDeArmas
+};
