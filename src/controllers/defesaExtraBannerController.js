@@ -49,26 +49,24 @@ class DefesaPessoalExtraBannerController {
         }
     }
 
-    // Atualizar um registro
     static async atualizar(req, res) {
         try {
-            const { registros } = req.body; // Espera um array de objetos { _id, ...dadosAtualizados }
+            const { registros } = req.body;
     
-            if (!Array.isArray(registros) || registros.length === 0) {
+            if (!registros || !Array.isArray(registros) || registros.length === 0) {
                 return res.status(400).json({ message: "Nenhum registro enviado para atualização." });
             }
     
             const registrosAtualizados = [];
     
             for (const registro of registros) {
-                const { _id, ...dadosAtualizados } = registro;
-                if (!_id) {
-                    return res.status(400).json({ message: "ID do registro é obrigatório." });
+                if (!registro._id) {
+                    return res.status(400).json({ message: "Todos os registros precisam de um _id válido." });
                 }
     
                 const atualizado = await defesaPessoalExtraBanner.findByIdAndUpdate(
-                    _id,
-                    dadosAtualizados,
+                    registro._id,
+                    registro,
                     { new: true }
                 ).populate("faixa");
     
@@ -78,19 +76,21 @@ class DefesaPessoalExtraBannerController {
             }
     
             if (registrosAtualizados.length > 0) {
-                res.status(200).json({
+                return res.status(200).json({
                     message: "Registros atualizados com sucesso.",
-                    registros: registrosAtualizados,
+                    registros: registrosAtualizados
                 });
             } else {
-                res.status(404).json({ message: "Nenhum registro encontrado para atualização." });
+                return res.status(404).json({ message: "Nenhum registro foi atualizado." });
             }
+    
         } catch (error) {
-            res.status(500).json({
+            return res.status(500).json({
                 message: `Erro ao atualizar registros: ${error.message}`,
             });
         }
     }
+    
     
 
     // Excluir um registro
