@@ -52,46 +52,36 @@ class DefesaPessoalExtraBannerController {
     static async atualizar(req, res) {
         try {
             const { registros } = req.body;
-    
+
             if (!registros || !Array.isArray(registros) || registros.length === 0) {
                 return res.status(400).json({ message: "Nenhum registro enviado para atualização." });
             }
-    
-            const registrosAtualizados = [];
-    
-            for (const registro of registros) {
-                if (!registro._id) {
-                    return res.status(400).json({ message: "Todos os registros precisam de um _id válido." });
-                }
-    
-                const atualizado = await defesaPessoalExtraBanner.findByIdAndUpdate(
-                    registro._id,
-                    registro,
-                    { new: true }
-                ).populate("faixa");
-    
-                if (atualizado) {
-                    registrosAtualizados.push(atualizado);
-                }
-            }
-    
-            if (registrosAtualizados.length > 0) {
-                return res.status(200).json({
-                    message: "Registros atualizados com sucesso.",
-                    registros: registrosAtualizados
-                });
-            } else {
-                return res.status(404).json({ message: "Nenhum registro foi atualizado." });
-            }
-    
+
+            const registrosAtualizados = await Promise.all(
+                registros.map(async (registro) => {
+                    const { _id, ...updateFields } = registro;
+                    if (!_id) {
+                        throw new Error('Cada objeto de atualização deve conter o campo "_id".');
+                    }
+                    const atualizado = await defesaPessoalExtraBanner.findByIdAndUpdate(
+                        _id,
+                        updateFields,
+                        { new: true }
+                    ).populate("faixa");
+                    if (!atualizado) {
+                        throw new Error(`Registro com _id ${_id} não encontrado.`);
+                    }
+                    return atualizado;
+                })
+            );
+
+            res.status(200).json({ message: 'Registros atualizados com sucesso', registros: registrosAtualizados });
         } catch (error) {
-            return res.status(500).json({
+            res.status(500).json({
                 message: `Erro ao atualizar registros: ${error.message}`,
             });
         }
     }
-    
-    
 
     // Excluir um registro
     static async excluir(req, res) {
