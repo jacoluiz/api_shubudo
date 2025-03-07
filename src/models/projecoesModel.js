@@ -9,6 +9,8 @@ const projecaoSchema = new mongoose.Schema(
         observacao: { type: [String], default: [] },
         ordem: { type: Number, required: true },
         faixa: { type: String, required: true },
+        video: { type: String }
+
     },
     { versionKey: false }
 );

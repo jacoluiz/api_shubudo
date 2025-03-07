@@ -5,7 +5,9 @@ const defesaPessoalESequenciaSchema = new mongoose.Schema({
     id: { type: mongoose.Schema.Types.ObjectId },
     faixa: { type: String, required: true },
     numeroOrdem: { type: Number, required: true },
-    movimentos: [movimentoPadraoSchema]
+    movimentos: [movimentoPadraoSchema],
+    video: { type: String }
+
 }, { versionKey: false });
 
 const defesaPessoal = mongoose.model("defesas_pessoais", defesaPessoalESequenciaSchema);
