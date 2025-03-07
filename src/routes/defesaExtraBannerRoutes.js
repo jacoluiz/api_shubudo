@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/defesasPessoaisExtraBanner", DefesaPessoalExtraBannerController.criar);
 router.get("/defesasPessoaisExtraBanner", DefesaPessoalExtraBannerController.listar);
 router.get("/defesasPessoaisExtraBanner/:id", DefesaPessoalExtraBannerController.buscarPorId);
-router.put("/defesasPessoaisExtraBanner/:id", DefesaPessoalExtraBannerController.atualizar);
+router.put("/defesasPessoaisExtraBanner", DefesaPessoalExtraBannerController.atualizar);
 router.delete("/defesasPessoaisExtraBanner/:id", DefesaPessoalExtraBannerController.excluir);
 
 export default router;

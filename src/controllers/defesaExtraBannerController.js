@@ -52,25 +52,46 @@ class DefesaPessoalExtraBannerController {
     // Atualizar um registro
     static async atualizar(req, res) {
         try {
-            const registroAtualizado = await defesaPessoalExtraBanner.findByIdAndUpdate(
-                req.params.id,
-                req.body,
-                { new: true }
-            ).populate("faixa");
-            if (registroAtualizado) {
+            const { registros } = req.body; // Espera um array de objetos { _id, ...dadosAtualizados }
+    
+            if (!Array.isArray(registros) || registros.length === 0) {
+                return res.status(400).json({ message: "Nenhum registro enviado para atualização." });
+            }
+    
+            const registrosAtualizados = [];
+    
+            for (const registro of registros) {
+                const { _id, ...dadosAtualizados } = registro;
+                if (!_id) {
+                    return res.status(400).json({ message: "ID do registro é obrigatório." });
+                }
+    
+                const atualizado = await defesaPessoalExtraBanner.findByIdAndUpdate(
+                    _id,
+                    dadosAtualizados,
+                    { new: true }
+                ).populate("faixa");
+    
+                if (atualizado) {
+                    registrosAtualizados.push(atualizado);
+                }
+            }
+    
+            if (registrosAtualizados.length > 0) {
                 res.status(200).json({
-                    message: "Registro atualizado com sucesso.",
-                    registro: registroAtualizado,
+                    message: "Registros atualizados com sucesso.",
+                    registros: registrosAtualizados,
                 });
             } else {
-                res.status(404).json({ message: "Registro não encontrado." });
+                res.status(404).json({ message: "Nenhum registro encontrado para atualização." });
             }
         } catch (error) {
             res.status(500).json({
-                message: `Erro ao atualizar registro: ${error.message}`,
+                message: `Erro ao atualizar registros: ${error.message}`,
             });
         }
     }
+    
 
     // Excluir um registro
     static async excluir(req, res) {
