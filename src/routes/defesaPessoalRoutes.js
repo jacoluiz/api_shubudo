@@ -8,7 +8,7 @@ routes.get("/defesaPessoal/busca", defesapessoalControler.listarDefesasPessoalPo
 
 routes.post("/defesaPessoal", defesapessoalControler.cadastrarDefesaPessoal);
 
-routes.put("/defesaPessoal/:id", defesapessoalControler.atualizarDefesaPessoal);
+routes.put("/defesaPessoal", defesapessoalControler.atualizarDefesaPessoal);
 
 routes.delete("/defesaPessoal/:id", defesapessoalControler.excluirDefesaPessoal);
 
