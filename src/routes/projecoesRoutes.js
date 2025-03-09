@@ -1,5 +1,5 @@
 import express from "express";
-import ProjecaoController from "../controllers/ProjecaoController.js";
+import ProjecaoController from "../controllers/projecoesController.js";
 
 const routes = express.Router();
 
