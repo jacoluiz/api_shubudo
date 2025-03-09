@@ -1,13 +1,16 @@
 import express from "express";
-import ProjecaoController from "../controllers/projecoesController.js";
+import ProjecaoController from "../controllers/ProjecaoController.js";
 
-const router = express.Router();
+const routes = express.Router();
 
-// Rotas para Projeções
-router.post("/projecoes", ProjecaoController.criar);
-router.get("/projecoes", ProjecaoController.listar);
-router.get("/projecoes/:id", ProjecaoController.buscarPorId);
-router.put("/projecoes/:id", ProjecaoController.atualizar);
-router.delete("/projecoes/:id", ProjecaoController.excluir);
+routes.get("/projecao", ProjecaoController.listar);
+routes.get("/projecao/:id", ProjecaoController.buscarPorId);
 
-export default router;
+routes.post("/projecao", ProjecaoController.criar);
+
+// Alterado: agora PUT não recebe ":id" na URL
+routes.put("/projecao", ProjecaoController.atualizar);
+
+routes.delete("/projecao/:id", ProjecaoController.excluir);
+
+export default routes;

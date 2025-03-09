@@ -32,9 +32,9 @@ class ProjecaoController {
     // Buscar projeção por ID
     static async buscarPorId(req, res) {
         try {
-            const projecao = await projecao.findById(req.params.id).populate("faixa");
-            if (projecao) {
-                res.status(200).json(projecao);
+            const projecaoEncontrada = await projecao.findById(req.params.id).populate("faixa");
+            if (projecaoEncontrada) {
+                res.status(200).json(projecaoEncontrada);
             } else {
                 res.status(404).json({ message: "Projeção não encontrada." });
             }
@@ -45,26 +45,30 @@ class ProjecaoController {
         }
     }
 
-    // Atualizar uma projeção
+    // Atualizar múltiplas projeções
     static async atualizar(req, res) {
         try {
-            const projecaoAtualizada = await projecao.findByIdAndUpdate(
-                req.params.id,
-                req.body,
-                { new: true }
-            ).populate("faixa");
-            if (projecaoAtualizada) {
-                res.status(200).json({
-                    message: "Projeção atualizada com sucesso.",
-                    projecao: projecaoAtualizada,
-                });
-            } else {
-                res.status(404).json({ message: "Projeção não encontrada." });
+            // O body deve ser um array de objetos contendo "_id" e os campos a serem atualizados
+            const projecoesAtualizar = req.body;
+
+            if (!Array.isArray(projecoesAtualizar)) {
+                return res.status(400).json({ message: "O body deve ser um array de projeções para atualizar." });
             }
+
+            // Atualiza todas as projeções em paralelo utilizando Promise.all
+            const resultados = await Promise.all(
+                projecoesAtualizar.map(async (updateObj) => {
+                    const { _id, ...updateFields } = updateObj;
+                    if (!_id) {
+                        throw new Error('Cada objeto de atualização deve conter o campo "_id".');
+                    }
+                    return await projecao.findByIdAndUpdate(_id, updateFields, { new: true }).populate("faixa");
+                })
+            );
+
+            res.status(200).json({ message: "Projeções atualizadas com sucesso.", data: resultados });
         } catch (error) {
-            res.status(500).json({
-                message: `Erro ao atualizar projeção: ${error.message}`,
-            });
+            res.status(500).json({ message: `Erro ao atualizar projeções: ${error.message}` });
         }
     }
 
