@@ -8,7 +8,7 @@ routes.get("/sequenciaDeCombate/busca", sequenciaDeCombateController.listarSeque
 
 routes.post("/sequenciaDeCombate", sequenciaDeCombateController.cadastrarSequencia);
 
-routes.put("/sequenciaDeCombate/:id", sequenciaDeCombateController.atualizarSequencia);
+routes.put("/sequenciaDeCombate", sequenciaDeCombateController.atualizarSequencia);
 
 routes.delete("/sequenciaDeCombate/:id", sequenciaDeCombateController.excluirSequencia);
 
