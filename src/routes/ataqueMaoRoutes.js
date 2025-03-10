@@ -8,7 +8,7 @@ routes.get("/ataqueMao/busca", ataqueDeMaoController.listarAtaquesDeMaoPorCor);
 
 routes.post("/ataqueMao", ataqueDeMaoController.cadastrarAtaquesDemao);
 
-routes.put("/ataqueMao/:id", ataqueDeMaoController.atualizarAtaquesDeMao);
+routes.put("/ataqueMao", ataqueDeMaoController.atualizarAtaquesDeMao);
 
 routes.delete("/ataqueMao/:id", ataqueDeMaoController.excluirAtaquesDemao);
 
