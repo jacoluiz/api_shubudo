@@ -9,7 +9,7 @@ class chuteController {
         catch (erro) {
             res.status(500).json({
                 message: `${erro.message} - Erro ao listar chutes`
-            })
+            });
         }
     };
 
@@ -22,21 +22,37 @@ class chuteController {
         catch (erro) {
             res.status(500).json({
                 message: `${erro.message}`
-            })
+            });
         }
     };
 
+    // Atualizar múltiplos chutes via body (espera array com _id e video)
     static async atualizarChute(req, res) {
         try {
-            await chute.findByIdAndUpdate(req.params.id, req.body);
-            res.status(200).json({ message: "Atualizado com sucesso" });
+            const updates = req.body;
+
+            if (!Array.isArray(updates)) {
+                return res.status(400).json({ message: "O body deve ser um array de chutes para atualizar." });
+            }
+
+            const results = await Promise.all(
+                updates.map(async (updateObj) => {
+                    const { _id, video } = updateObj;
+                    if (!_id) {
+                        throw new Error('Cada objeto de atualização deve conter o campo "_id".');
+                    }
+                    return await chute.findByIdAndUpdate(_id, { video }, { new: true });
+                })
+            );
+
+            res.status(200).json({ message: "Chutes atualizados com sucesso", data: results });
         }
         catch (erro) {
             res.status(500).json({
                 message: `${erro.message}`
-            })
+            });
         }
-    }
+    };
 
     static async excluirChute(req, res) {
         try {
@@ -46,9 +62,9 @@ class chuteController {
         catch (erro) {
             res.status(500).json({
                 message: `${erro.message}`
-            })
+            });
         }
-    }
+    };
 
     static async cadastrarChute(req, res) {
         try {
@@ -61,9 +77,9 @@ class chuteController {
         catch (erro) {
             res.status(500).json({
                 message: `${erro.message}`
-            })
+            });
         }
     }
 }
 
-export default chuteController
+export default chuteController;

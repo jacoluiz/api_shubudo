@@ -8,7 +8,7 @@ routes.get("/chute/busca", chuteController.listarChutePorCor);
 
 routes.post("/chute", chuteController.cadastrarChute);
 
-routes.put("/chute/:id", chuteController.atualizarChute);
+routes.put("/chute", chuteController.atualizarChute);
 
 routes.delete("/chute/:id", chuteController.excluirChute);
 
