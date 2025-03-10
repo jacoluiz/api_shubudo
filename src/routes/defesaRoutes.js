@@ -8,7 +8,7 @@ routes.get("/defesa/busca", defesaControler.listarDefesasPorCor);
 
 routes.post("/defesa", defesaControler.cadastrarDefesa);
 
-routes.put("/defesa/:id", defesaControler.atualizarDefesa);
+routes.put("/defesa", defesaControler.atualizarDefesa);
 
 routes.delete("/defesa/:id", defesaControler.excluirDefesa);
 
