@@ -1,4 +1,4 @@
-import DateEvent from "../models/dateModel.js";
+import DateEvent from "../models/dataModel.js";
 
 class dateController {
   static async listarDatas(req, res) {

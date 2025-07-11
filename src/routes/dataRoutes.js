@@ -1,5 +1,5 @@
 import express from "express";
-import dateController from "../controllers/dateController.js";
+import dateController from "../controllers/dataController.js";
 
 const dateRoutes = express.Router();
 
