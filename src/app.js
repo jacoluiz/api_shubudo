@@ -16,22 +16,10 @@ conexao.once("open", () => {
   console.log("Conectado no banco de dados");
 });
 
-// Inicializa app Express
 const app = express();
-
-// Habilita CORS para permitir requisições do frontend
 app.use(cors());
-
-// Permite parse de JSON no body das requisições
 app.use(express.json({ limit: '50mb' }));
-
-// Serve arquivos estáticos (frontend) da pasta 'public'
 app.use(express.static("public"));
-
-// Monta rotas da API
 routes(app);
-
-// **Não chame mais `app.listen()` aqui**
-// Apenas exporte o `app` para ser usado pelo `server.js`
 
 export default app;
