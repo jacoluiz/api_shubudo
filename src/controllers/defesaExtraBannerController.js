@@ -51,9 +51,9 @@ class DefesaPessoalExtraBannerController {
 
     static async atualizar(req, res) {
         try {
-            const { registros } = req.body;
+            const registros = Array.isArray(req.body) ? req.body : req.body.registros;
 
-            if (!registros || !Array.isArray(registros) || registros.length === 0) {
+            if (!registros || registros.length === 0) {
                 return res.status(400).json({ message: "Nenhum registro enviado para atualização." });
             }
 
