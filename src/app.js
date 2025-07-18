@@ -23,7 +23,7 @@ const app = express();
 app.use(cors());
 
 // Permite parse de JSON no body das requisições
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 // Serve arquivos estáticos (frontend) da pasta 'public'
 app.use(express.static("public"));
