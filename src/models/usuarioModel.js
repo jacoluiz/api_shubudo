@@ -2,14 +2,18 @@ import mongoose from "mongoose";
 
 const usuarioSchema = new mongoose.Schema({
     nome: { type: String, required: true },
-    username: { type: String, required: true, unique: true }, // Nome de usuário único
+    username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     senha: { type: String, required: true },
     peso: { type: String },
     altura: { type: String },
     idade: { type: String },
-    perfil: { type: String, default: "básico"},
-    corFaixa: { type: String }
+    perfil: { type: String, default: "básico" },
+    corFaixa: { type: String },
+    status: { type: String, default: "ativo" },
+    dan: { type: Number, default: 0 },
+    academia: { type: String },
+    tamanhoFaixa: { type: String }
 }, { versionKey: false });
 
 const Usuario = mongoose.model("Usuario", usuarioSchema);
