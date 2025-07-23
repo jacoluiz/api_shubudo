@@ -14,6 +14,7 @@ import aviso from "./avisosRoutes.js";
 import armamento from "./armamentoRoutes.js";
 import defesasDeArma from "./defesasDeArmasRoutes.js"
 import date from "./dataRoutes.js";
+import tecnicasDeChao from "./tecnicasDeChaoRoutes.js";
 
 const routes = (app) => {
     app.use(express.json(), movimento);
@@ -31,6 +32,7 @@ const routes = (app) => {
     app.use(express.json(), armamento)
     app.use(express.json(), defesasDeArma)
     app.use(express.json(), date)
+    app.use(express.json(), tecnicasDeChao);
 };
 
 export default routes;
