@@ -56,18 +56,30 @@ class TecnicaChaoController {
         }
     }
 
-    // Cadastrar uma nova técnica
+    // Cadastrar uma ou várias técnicas
     static async cadastrarTecnica(req, res) {
         try {
-            const nova = await TecnicaChao.create(req.body);
-            res.status(201).json({
-                message: "Criado com sucesso",
-                tecnica: nova
-            });
+            const body = req.body;
+
+            if (Array.isArray(body)) {
+                const novas = await TecnicaChao.insertMany(body);
+                res.status(201).json({
+                    message: "Técnicas cadastradas com sucesso",
+                    tecnicas: novas
+                });
+            } else {
+                const nova = await TecnicaChao.create(body);
+                res.status(201).json({
+                    message: "Criado com sucesso",
+                    tecnica: nova
+                });
+            }
+
         } catch (erro) {
             res.status(500).json({ message: `${erro.message}` });
         }
     }
+
 }
 
 export default TecnicaChaoController;
