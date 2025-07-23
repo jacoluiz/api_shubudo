@@ -1,4 +1,4 @@
-import Aviso from "../models/avisosModel.js";
+import Aviso from "../models/avisoModel.js";
 
 class AvisoController {
   // Listar todos os avisos
@@ -27,10 +27,8 @@ class AvisoController {
   // Cadastrar um novo aviso
   static async cadastrarAviso(req, res) {
     try {
-      // Cria uma nova instância do aviso com os dados enviados no body da requisição
       const novoAviso = new Aviso(req.body);
       await novoAviso.save();
-
       res.status(201).json({
         message: "Aviso criado com sucesso.",
         aviso: novoAviso,
@@ -40,11 +38,10 @@ class AvisoController {
     }
   }
 
-  // Atualizar um aviso existente
+  // Atualizar aviso por ID via /avisos/:id
   static async atualizarAviso(req, res) {
     try {
       const { id } = req.params;
-      // O parâmetro { new: true } retorna o documento após a atualização
       const avisoAtualizado = await Aviso.findByIdAndUpdate(id, req.body, { new: true });
       if (!avisoAtualizado) {
         return res.status(404).json({ message: "Aviso não encontrado." });
@@ -52,6 +49,34 @@ class AvisoController {
       res.status(200).json(avisoAtualizado);
     } catch (erro) {
       res.status(500).json({ message: `${erro.message} - Erro ao atualizar aviso.` });
+    }
+  }
+
+  // Atualização em lote via PUT /avisos
+  static async atualizarAvisosEmLote(req, res) {
+    try {
+      const atualizacoes = req.body; // Deve ser um array de objetos com { id, ...dados }
+
+      if (!Array.isArray(atualizacoes) || atualizacoes.length === 0) {
+        return res.status(400).json({ message: "Envie uma lista de avisos para atualizar." });
+      }
+
+      const resultados = [];
+
+      for (const atualizacao of atualizacoes) {
+        const { id, ...dadosAtualizados } = atualizacao;
+        if (!id) continue;
+
+        const atualizado = await Aviso.findByIdAndUpdate(id, dadosAtualizados, { new: true });
+        if (atualizado) resultados.push(atualizado);
+      }
+
+      res.status(200).json({
+        message: "Avisos atualizados com sucesso.",
+        atualizados: resultados,
+      });
+    } catch (erro) {
+      res.status(500).json({ message: `${erro.message} - Erro ao atualizar avisos em lote.` });
     }
   }
 

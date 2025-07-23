@@ -12,10 +12,13 @@ routes.get("/aviso/:id", AvisoController.buscarAvisoPorId);
 // Cadastrar um novo aviso
 routes.post("/aviso", AvisoController.cadastrarAviso);
 
-// Atualizar um aviso existente
+// Atualizar um aviso específico por ID
 routes.put("/aviso/:id", AvisoController.atualizarAviso);
 
-// Excluir um aviso
+// Atualizar vários avisos em lote
+routes.put("/aviso", AvisoController.atualizarAvisosEmLote);
+
+// Excluir um aviso por ID
 routes.delete("/aviso/:id", AvisoController.excluirAviso);
 
 export default routes;
