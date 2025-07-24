@@ -32,16 +32,21 @@ class AvisoController {
       const novoAviso = new Aviso(req.body);
       await novoAviso.save();
 
-      // Buscar usuários com base nos e-mails do público-alvo
-      const usuarios = await Usuario.find({
-        email: { $in: novoAviso.publicoAlvo }
-      });
+      let usuarios = [];
 
-      // Filtrar os tokens válidos
-      const tokens = usuarios
-        .map(u => u.fcmToken)
-        .filter(token => !!token);
+      // Se público-alvo estiver vazio, buscar todos os usuários com token
+      if (!novoAviso.publicoAlvo || novoAviso.publicoAlvo.length === 0) {
+        usuarios = await Usuario.find({ fcmToken: { $ne: null } });
+      } else {
+        // Buscar apenas usuários do público-alvo com token válido
+        usuarios = await Usuario.find({
+          email: { $in: novoAviso.publicoAlvo },
+          fcmToken: { $ne: null }
+        });
+      }
 
+      // Extrair os tokens válidos
+      const tokens = usuarios.map(u => u.fcmToken);
 
       // Disparar as notificações, se houver tokens
       if (tokens.length > 0) {
@@ -52,7 +57,6 @@ class AvisoController {
             'Você tem um novo aviso. Acesse o app para ver.'
           );
         }
-
       }
 
       res.status(201).json({
@@ -64,6 +68,7 @@ class AvisoController {
       res.status(500).json({ message: `${erro.message} - Erro ao cadastrar aviso.` });
     }
   }
+
 
   // Atualizar aviso por ID via /avisos/:id
   static async atualizarAviso(req, res) {
