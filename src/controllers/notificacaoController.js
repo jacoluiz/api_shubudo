@@ -44,3 +44,4 @@ const notificacoesController = {
 };
 
 export default notificacoesController;
+export { enviarPushParaUsuario };
