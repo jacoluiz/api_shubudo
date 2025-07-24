@@ -1,5 +1,6 @@
 import Aviso from "../models/avisoModel.js";
 import Usuario from "../models/usuarioModel.js";
+import { enviarPushParaUsuario } from "../controllers/notificacaoController.js";
 
 class AvisoController {
   // Listar todos os avisos
