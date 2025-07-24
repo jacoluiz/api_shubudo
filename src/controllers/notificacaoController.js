@@ -12,11 +12,13 @@ const enviarPushParaUsuario = async (token, titulo, corpo) => {
     try {
         const response = await admin.messaging().send(mensagem);
         console.log("✅ Notificação enviada:", response);
+        return response;
     } catch (error) {
         console.error("❌ Erro ao enviar notificação:", error);
         throw error;
     }
 };
+
 
 const notificacoesController = {
     enviarNotificacao: async (req, res) => {
