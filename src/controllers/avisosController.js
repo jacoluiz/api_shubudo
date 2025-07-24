@@ -1,4 +1,5 @@
 import Aviso from "../models/avisoModel.js";
+import Usuario from "../models/usuarioModel.js";
 
 class AvisoController {
   // Listar todos os avisos
@@ -29,10 +30,34 @@ class AvisoController {
     try {
       const novoAviso = new Aviso(req.body);
       await novoAviso.save();
+
+      // Buscar usuários com base nos e-mails do público-alvo
+      const usuarios = await Usuario.find({
+        email: { $in: novoAviso.publicoAlvo }
+      });
+
+      // Filtrar os tokens válidos
+      const tokens = usuarios
+        .map(u => u.tokenNotificacao)
+        .filter(token => !!token);
+
+      // Disparar as notificações, se houver tokens
+      if (tokens.length > 0) {
+        for (const token of tokens) {
+          await enviarPushParaUsuario(
+            token,
+            'Novo aviso disponível',
+            'Você tem um novo aviso. Acesse o app para ver.'
+          );
+        }
+
+      }
+
       res.status(201).json({
         message: "Aviso criado com sucesso.",
         aviso: novoAviso,
       });
+
     } catch (erro) {
       res.status(500).json({ message: `${erro.message} - Erro ao cadastrar aviso.` });
     }
