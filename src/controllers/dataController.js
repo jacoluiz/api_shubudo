@@ -1,4 +1,6 @@
 import DateEvent from "../models/dataModel.js";
+import Usuario from "../models/usuarioModel.js";
+import { enviarPushParaUsuario } from "../controllers/notificacaoController.js";
 
 class dateController {
   static async listarDatas(req, res) {
@@ -15,6 +17,22 @@ class dateController {
   static async criarData(req, res) {
     try {
       const novaData = await DateEvent.create(req.body);
+
+      // Buscar todos os usuários com token válido
+      const usuarios = await Usuario.find({ fcmToken: { $ne: null } });
+
+      const tokens = usuarios.map(u => u.fcmToken);
+
+      if (tokens.length > 0) {
+        for (const token of tokens) {
+          await enviarPushParaUsuario(
+            token,
+            "Novo evento adicionado",
+            "Ei! Tem evento no no aplicativo. Confira!"
+          );
+        }
+      }
+
       res.status(201).json({
         message: "Data criada com sucesso",
         data: novaData
@@ -25,6 +43,7 @@ class dateController {
       });
     }
   }
+
 
   static async atualizarData(req, res) {
     try {

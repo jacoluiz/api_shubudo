@@ -69,7 +69,6 @@ class AvisoController {
     }
   }
 
-
   // Atualizar aviso por ID via /avisos/:id
   static async atualizarAviso(req, res) {
     try {
