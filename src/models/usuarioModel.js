@@ -4,7 +4,6 @@ const usuarioSchema = new mongoose.Schema({
     nome: { type: String, required: true },
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
-    senha: { type: String, required: true },
     peso: { type: String },
     altura: { type: String },
     idade: { type: String },
@@ -15,7 +14,8 @@ const usuarioSchema = new mongoose.Schema({
     academia: { type: String },
     tamanhoFaixa: { type: String },
     lesaoOuLaudosMedicos: { type: String },
-    registroAKSD: { type: String }
+    registroAKSD: { type: String },
+    fcmToken: { type: String }
 }, { versionKey: false });
 
 const Usuario = mongoose.model("Usuario", usuarioSchema);
