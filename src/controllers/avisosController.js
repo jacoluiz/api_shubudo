@@ -38,8 +38,9 @@ class AvisoController {
 
       // Filtrar os tokens válidos
       const tokens = usuarios
-        .map(u => u.tokenNotificacao)
+        .map(u => u.fcmToken)
         .filter(token => !!token);
+
 
       // Disparar as notificações, se houver tokens
       if (tokens.length > 0) {
