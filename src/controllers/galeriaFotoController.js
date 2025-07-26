@@ -21,7 +21,7 @@ class GaleriaFotoController {
     static async listarPorEvento(req, res) {
         try {
             const { eventoId } = req.params;
-            const fotos = await GaleriaFoto.find({ evento: eventoId });
+            const fotos = await GaleriaFoto.find({ eventoId: eventoId });
             res.status(200).json(fotos);
         } catch (err) {
             res.status(500).json({ message: "Erro ao listar fotos", error: err.message });
