@@ -17,6 +17,7 @@ import date from "./dataRoutes.js";
 import tecnicasDeChao from "./tecnicasDeChaoRoutes.js";
 import notificacoes from "./notificacoesRoutes.js";
 import academia from "./academiaRoute.js";
+import galeriaRoutes from "./galeriaRoute.js";
 
 const routes = (app) => {
     app.use(express.json(), movimento);
@@ -37,6 +38,7 @@ const routes = (app) => {
     app.use(express.json(), tecnicasDeChao);
     app.use(express.json(), notificacoes);
     app.use(express.json(), academia);
+    app.use(express.json(), galeriaRoutes);
 
 };
 
