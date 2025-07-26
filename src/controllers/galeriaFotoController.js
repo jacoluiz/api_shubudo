@@ -22,47 +22,53 @@ class GaleriaFotoController {
 
     static async enviarFoto(req, res) {
         try {
-            const file = req.file;
+            const files = req.files; // ← múltiplas fotos
             const { eventoId } = req.params;
             const { academiaId, usuarioId } = req.body;
 
-            if (!file || !eventoId || !academiaId || !usuarioId) {
-                return res.status(400).json({ message: "Dados incompletos para envio da foto" });
+            if (!files || files.length === 0 || !eventoId || !academiaId || !usuarioId) {
+                return res.status(400).json({ message: "Dados incompletos para envio das fotos" });
             }
 
-            const s3Path = `galeria/${academiaId}/${eventoId}/${Date.now()}-${file.originalname}`;
+            const novasFotos = [];
 
-            const uploadResult = await s3.upload({
-                Bucket: process.env.AWS_BUCKET_NAME,
-                Key: s3Path,
-                Body: file.buffer,
-                ContentType: file.mimetype,
-                ACL: "public-read"
-            }).promise();
+            for (const file of files) {
+                const s3Path = `galeria/${academiaId}/${eventoId}/${Date.now()}-${file.originalname}`;
 
-            const novaFoto = await GaleriaFoto.create({
-                evento: eventoId,
-                url: uploadResult.Location,
-                uploadedBy: usuarioId
-            });
+                const uploadResult = await s3.upload({
+                    Bucket: process.env.AWS_BUCKET_NAME,
+                    Key: s3Path,
+                    Body: file.buffer,
+                    ContentType: file.mimetype,
+                    ACL: "public-read"
+                }).promise();
+
+                const novaFoto = await GaleriaFoto.create({
+                    evento: eventoId,
+                    url: uploadResult.Location,
+                    uploadedBy: usuarioId
+                });
+
+                novasFotos.push(novaFoto);
+            }
 
             // Enviar push para todos usuários com FCM Token
             const usuarios = await Usuario.find({ fcmToken: { $ne: null } });
             for (const usuario of usuarios) {
                 await enviarPushParaUsuario(
                     usuario.fcmToken,
-                    "Nova foto na galeria!",
-                    "Um novo momento foi registrado. Vá conferir na galeria!"
+                    "Novas fotos na galeria!",
+                    "Momentos incríveis foram adicionados. Vá conferir!"
                 );
             }
 
             res.status(201).json({
-                message: "Foto enviada com sucesso",
-                data: novaFoto
+                message: "Fotos enviadas com sucesso",
+                data: novasFotos
             });
 
         } catch (err) {
-            res.status(500).json({ message: "Erro ao enviar foto", error: err.message });
+            res.status(500).json({ message: "Erro ao enviar fotos", error: err.message });
         }
     }
 
@@ -73,11 +79,9 @@ class GaleriaFotoController {
 
             if (!foto) return res.status(404).json({ message: "Foto não encontrada" });
 
-            // Extrair o caminho (Key) do S3 a partir da URL
             const urlParts = foto.url.split("/");
             const key = urlParts.slice(3).join("/");
 
-            // Excluir do S3
             await s3.deleteObject({
                 Bucket: process.env.AWS_BUCKET_NAME,
                 Key: key
