@@ -51,7 +51,7 @@ class GaleriaFotoController {
                 }).promise();
 
                 const novaFoto = await GaleriaFoto.create({
-                    evento: eventoId,
+                    eventoId: eventoId,
                     url: uploadResult.Location,
                     uploadedBy: usuarioId
                 });
