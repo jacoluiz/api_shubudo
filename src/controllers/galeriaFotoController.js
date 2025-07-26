@@ -9,6 +9,14 @@ const s3 = new AWS.S3({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 });
 
+console.log("AWS CONFIG:", {
+    region: process.env.AWS_REGION,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    bucket: process.env.AWS_BUCKET_NAME
+});
+
+
 class GaleriaFotoController {
     static async listarPorEvento(req, res) {
         try {
@@ -39,8 +47,7 @@ class GaleriaFotoController {
                     Bucket: process.env.AWS_BUCKET_NAME,
                     Key: s3Path,
                     Body: file.buffer,
-                    ContentType: file.mimetype,
-                    ACL: "public-read"
+                    ContentType: file.mimetype
                 }).promise();
 
                 const novaFoto = await GaleriaFoto.create({
