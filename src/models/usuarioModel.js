@@ -8,6 +8,7 @@ const usuarioSchema = new mongoose.Schema({
     altura: { type: String },
     idade: { type: String },
     perfil: { type: String, default: "básico" },
+    perfis: { type: [String], default: ["aluno"] },
     corFaixa: { type: String },
     status: { type: String, default: "ativo" },
     dan: { type: Number, default: 0 },
