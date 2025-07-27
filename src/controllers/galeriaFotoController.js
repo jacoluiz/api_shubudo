@@ -29,6 +29,11 @@ class GaleriaFotoController {
             const { eventoId } = req.params;
             const { academiaId, usuarioId } = req.body;
 
+            console.log("eventoId:", eventoId);
+            console.log("academiaId:", academiaId);
+            console.log("usuarioId:", usuarioId);
+            console.log("files:", files);
+
             if (!files || files.length === 0 || !eventoId || !academiaId || !usuarioId) {
                 return res.status(400).json({ message: "Dados incompletos para envio das fotos" });
             }
