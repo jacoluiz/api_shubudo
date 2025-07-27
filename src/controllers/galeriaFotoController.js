@@ -38,24 +38,30 @@ class GaleriaFotoController {
 
             const novasFotos = [];
 
-            for (const file of files) {
-                const s3Path = `galeria/${academiaId}/${eventoId}/${Date.now()}`;
+            for (const usuario of usuarios) {
+                try {
+                    await enviarPushParaUsuario(
+                        usuario.fcmToken,
+                        "Novas fotos na galeria!",
+                        "Momentos incríveis foram adicionados. Vá conferir!"
+                    );
+                } catch (err) {
+                    if (
+                        err.code === "messaging/registration-token-not-registered" ||
+                        err.errorInfo?.code === "messaging/registration-token-not-registered"
+                    ) {
+                        console.warn(`⚠️ Token inválido detectado: ${usuario.fcmToken}`);
 
-                const uploadResult = await s3.upload({
-                    Bucket: process.env.AWS_BUCKET_NAME,
-                    Key: s3Path,
-                    Body: file.buffer,
-                    ContentType: file.mimetype
-                }).promise();
-
-                const novaFoto = await GaleriaFoto.create({
-                    eventoId: eventoId,
-                    url: uploadResult.Location,
-                    uploadedBy: usuarioId
-                });
-
-                novasFotos.push(novaFoto);
+                        // (Opcional) Remover token inválido do banco
+                        await Usuario.findByIdAndUpdate(usuario._id, {
+                            $unset: { fcmToken: "" }
+                        });
+                    } else {
+                        console.error("❌ Erro ao enviar push:", err);
+                    }
+                }
             }
+
 
             // Enviar push para todos usuários com FCM Token
             const usuarios = await Usuario.find({ fcmToken: { $ne: null } });
