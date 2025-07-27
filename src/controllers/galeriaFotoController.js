@@ -9,14 +9,6 @@ const s3 = new AWS.S3({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 });
 
-console.log("AWS CONFIG:", {
-    region: process.env.AWS_REGION,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    bucket: process.env.AWS_BUCKET_NAME
-});
-
-
 class GaleriaFotoController {
     static async listarPorEvento(req, res) {
         try {
@@ -41,7 +33,7 @@ class GaleriaFotoController {
             const novasFotos = [];
 
             for (const file of files) {
-                const s3Path = `galeria/${academiaId}/${eventoId}/${Date.now()}-${file.originalname}`;
+                const s3Path = `galeria/${academiaId}/${eventoId}/${Date.now()}`;
 
                 const uploadResult = await s3.upload({
                     Bucket: process.env.AWS_BUCKET_NAME,
@@ -80,39 +72,52 @@ class GaleriaFotoController {
     }
 
     static async deletarFotos(req, res) {
-        try {
-            const { ids } = req.body; // espera: { "ids": ["id1", "id2", ...] }
+    try {
+        const { ids } = req.body;
 
-            if (!Array.isArray(ids) || ids.length === 0) {
-                return res.status(400).json({ message: "Lista de IDs inválida" });
-            }
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ message: "Lista de IDs inválida" });
+        }
 
-            // Busca todas as fotos com os IDs fornecidos
-            const fotos = await GaleriaFoto.find({ _id: { $in: ids } });
+        const fotos = await GaleriaFoto.find({ _id: { $in: ids } });
 
-            if (fotos.length === 0) {
-                return res.status(404).json({ message: "Nenhuma foto encontrada" });
-            }
+        if (fotos.length === 0) {
+            return res.status(404).json({ message: "Nenhuma foto encontrada" });
+        }
 
-            // Deleta os arquivos no S3
-            for (const foto of fotos) {
+        const errosS3 = [];
+
+        await Promise.all(fotos.map(async (foto) => {
+            try {
                 const urlParts = foto.url.split("/");
-                const key = urlParts.slice(3).join("/");
+                const key = decodeURIComponent(urlParts.slice(3).join("/"));
+
+                console.log("Deletando S3 key:", key);
 
                 await s3.deleteObject({
                     Bucket: process.env.AWS_BUCKET_NAME,
                     Key: key
                 }).promise();
+            } catch (err) {
+                errosS3.push(foto._id);
             }
+        }));
 
-            // Deleta os registros no banco
-            await GaleriaFoto.deleteMany({ _id: { $in: ids } });
-
-            res.status(200).json({ message: "Fotos deletadas com sucesso" });
-        } catch (err) {
-            res.status(500).json({ message: "Erro ao deletar fotos", error: err.message });
+        if (errosS3.length > 0) {
+            return res.status(500).json({
+                message: "Erro ao deletar algumas fotos no S3",
+                falhas: errosS3
+            });
         }
+
+        await GaleriaFoto.deleteMany({ _id: { $in: ids } });
+
+        res.status(200).json({ message: "Fotos deletadas com sucesso" });
+    } catch (err) {
+        res.status(500).json({ message: "Erro ao deletar fotos", error: err.message });
     }
+}
+
 
 }
 
