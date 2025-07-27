@@ -79,28 +79,41 @@ class GaleriaFotoController {
         }
     }
 
-    static async deletarFoto(req, res) {
+    static async deletarFotos(req, res) {
         try {
-            const { id } = req.params;
-            const foto = await GaleriaFoto.findById(id);
+            const { ids } = req.body; // espera: { "ids": ["id1", "id2", ...] }
 
-            if (!foto) return res.status(404).json({ message: "Foto não encontrada" });
+            if (!Array.isArray(ids) || ids.length === 0) {
+                return res.status(400).json({ message: "Lista de IDs inválida" });
+            }
 
-            const urlParts = foto.url.split("/");
-            const key = urlParts.slice(3).join("/");
+            // Busca todas as fotos com os IDs fornecidos
+            const fotos = await GaleriaFoto.find({ _id: { $in: ids } });
 
-            await s3.deleteObject({
-                Bucket: process.env.AWS_BUCKET_NAME,
-                Key: key
-            }).promise();
+            if (fotos.length === 0) {
+                return res.status(404).json({ message: "Nenhuma foto encontrada" });
+            }
 
-            await GaleriaFoto.findByIdAndDelete(id);
+            // Deleta os arquivos no S3
+            for (const foto of fotos) {
+                const urlParts = foto.url.split("/");
+                const key = urlParts.slice(3).join("/");
 
-            res.status(200).json({ message: "Foto deletada com sucesso" });
+                await s3.deleteObject({
+                    Bucket: process.env.AWS_BUCKET_NAME,
+                    Key: key
+                }).promise();
+            }
+
+            // Deleta os registros no banco
+            await GaleriaFoto.deleteMany({ _id: { $in: ids } });
+
+            res.status(200).json({ message: "Fotos deletadas com sucesso" });
         } catch (err) {
-            res.status(500).json({ message: "Erro ao deletar foto", error: err.message });
+            res.status(500).json({ message: "Erro ao deletar fotos", error: err.message });
         }
     }
+
 }
 
 export default GaleriaFotoController;

@@ -19,6 +19,6 @@ galeriaRoutes.post(
   upload.array("foto"),
   GaleriaFotoController.enviarFoto
 );
-galeriaRoutes.delete("/galeria/fotos/:id", GaleriaFotoController.deletarFoto);
+galeriaRoutes.delete("/galeria/fotos", GaleriaFotoController.deletarFotos);
 
 export default galeriaRoutes;
