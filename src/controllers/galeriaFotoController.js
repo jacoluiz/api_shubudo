@@ -22,21 +22,39 @@ class GaleriaFotoController {
 
     static async enviarFoto(req, res) {
         try {
-            const files = req.files; // simples e direto
+            const files = req.files;
 
             const { eventoId } = req.params;
             const { academiaId, usuarioId } = req.body;
-
-            console.log("eventoId:", eventoId);
-            console.log("academiaId:", academiaId);
-            console.log("usuarioId:", usuarioId);
-            console.log("files:", files);
 
             if (!files || files.length === 0 || !eventoId || !academiaId || !usuarioId) {
                 return res.status(400).json({ message: "Dados incompletos para envio das fotos" });
             }
 
             const novasFotos = [];
+
+            // ⛳️ Upload das fotos no S3
+            for (const file of files) {
+                const s3Path = `galeria/${academiaId}/${eventoId}/${Date.now()}`;
+
+                const uploadResult = await s3.upload({
+                    Bucket: process.env.AWS_BUCKET_NAME,
+                    Key: s3Path,
+                    Body: file.buffer,
+                    ContentType: file.mimetype
+                }).promise();
+
+                const novaFoto = await GaleriaFoto.create({
+                    eventoId: eventoId,
+                    url: uploadResult.Location,
+                    uploadedBy: usuarioId
+                });
+
+                novasFotos.push(novaFoto);
+            }
+
+            // 🔔 Enviar push notificações
+            const usuarios = await Usuario.find({ fcmToken: { $ne: null } });
 
             for (const usuario of usuarios) {
                 try {
@@ -62,17 +80,6 @@ class GaleriaFotoController {
                 }
             }
 
-
-            // Enviar push para todos usuários com FCM Token
-            const usuarios = await Usuario.find({ fcmToken: { $ne: null } });
-            for (const usuario of usuarios) {
-                await enviarPushParaUsuario(
-                    usuario.fcmToken,
-                    "Novas fotos na galeria!",
-                    "Momentos incríveis foram adicionados. Vá conferir!"
-                );
-            }
-
             res.status(201).json({
                 message: "Fotos enviadas com sucesso",
                 data: novasFotos
@@ -82,6 +89,7 @@ class GaleriaFotoController {
             res.status(500).json({ message: "Erro ao enviar fotos", error: err.message });
         }
     }
+
 
     static async deletarFotos(req, res) {
         try {
