@@ -72,53 +72,51 @@ class GaleriaFotoController {
     }
 
     static async deletarFotos(req, res) {
-    try {
-        const { ids } = req.body;
+        try {
+            const { ids } = req.body;
 
-        if (!Array.isArray(ids) || ids.length === 0) {
-            return res.status(400).json({ message: "Lista de IDs inválida" });
-        }
-
-        const fotos = await GaleriaFoto.find({ _id: { $in: ids } });
-
-        if (fotos.length === 0) {
-            return res.status(404).json({ message: "Nenhuma foto encontrada" });
-        }
-
-        const errosS3 = [];
-
-        await Promise.all(fotos.map(async (foto) => {
-            try {
-                const urlParts = foto.url.split("/");
-                const key = decodeURIComponent(urlParts.slice(3).join("/"));
-
-                console.log("Deletando S3 key:", key);
-
-                await s3.deleteObject({
-                    Bucket: process.env.AWS_BUCKET_NAME,
-                    Key: key
-                }).promise();
-            } catch (err) {
-                errosS3.push(foto._id);
+            if (!Array.isArray(ids) || ids.length === 0) {
+                return res.status(400).json({ message: "Lista de IDs inválida" });
             }
-        }));
 
-        if (errosS3.length > 0) {
-            return res.status(500).json({
-                message: "Erro ao deletar algumas fotos no S3",
-                falhas: errosS3
-            });
+            const fotos = await GaleriaFoto.find({ _id: { $in: ids } });
+
+            if (fotos.length === 0) {
+                return res.status(404).json({ message: "Nenhuma foto encontrada" });
+            }
+
+            const errosS3 = [];
+
+            await Promise.all(fotos.map(async (foto) => {
+                try {
+                    const urlParts = foto.url.split("/");
+                    const key = decodeURIComponent(urlParts.slice(3).join("/"));
+
+                    console.log("Deletando S3 key:", key);
+
+                    await s3.deleteObject({
+                        Bucket: process.env.AWS_BUCKET_NAME,
+                        Key: key
+                    }).promise();
+                } catch (err) {
+                    errosS3.push(foto._id);
+                }
+            }));
+
+            if (errosS3.length > 0) {
+                return res.status(500).json({
+                    message: "Erro ao deletar algumas fotos no S3",
+                    falhas: errosS3
+                });
+            }
+
+            await GaleriaFoto.deleteMany({ _id: { $in: ids } });
+
+            res.status(200).json({ message: "Fotos deletadas com sucesso" });
+        } catch (err) {
+            res.status(500).json({ message: "Erro ao deletar fotos", error: err.message });
         }
-
-        await GaleriaFoto.deleteMany({ _id: { $in: ids } });
-
-        res.status(200).json({ message: "Fotos deletadas com sucesso" });
-    } catch (err) {
-        res.status(500).json({ message: "Erro ao deletar fotos", error: err.message });
     }
-}
-
-
 }
 
 export default GaleriaFotoController;

@@ -1,6 +1,7 @@
 import GaleriaEvento from "../models/galeriaEventoModel.js";
 import Usuario from "../models/usuarioModel.js";
 import GaleriaFoto from "../models/galeriaFotoModel.js";
+import GaleriaFotoController from "./galeriaFotoController.js";
 import { enviarPushParaUsuario } from "./notificacaoController.js";
 
 import AWS from "aws-sdk";
@@ -72,24 +73,27 @@ class GaleriaEventoController {
         try {
             const { id } = req.params;
 
-            // 1. Buscar todas as fotos associadas ao evento
+            // Buscar IDs de todas as fotos associadas ao evento
             const fotos = await GaleriaFoto.find({ eventoId: id });
+            const idsDasFotos = fotos.map(f => f._id.toString());
 
-            // 2. Deletar cada imagem do S3
-            for (const foto of fotos) {
-                const urlParts = foto.url.split("/");
-                const key = urlParts.slice(3).join("/"); // extrai o caminho relativo do arquivo
-
-                await s3.deleteObject({
-                    Bucket: process.env.AWS_BUCKET_NAME,
-                    Key: key
-                }).promise();
+            // Reutiliza o método de deletar fotos do controller
+            if (idsDasFotos.length > 0) {
+                // Simula uma req/res com os dados necessários
+                const reqFotos = { body: { ids: idsDasFotos } };
+                const resFotos = {
+                    status: (code) => ({
+                        json: (data) => {
+                            if (code >= 400) {
+                                throw new Error(data.message || "Erro ao deletar fotos");
+                            }
+                        }
+                    })
+                };
+                await GaleriaFotoController.deletarFotos(reqFotos, resFotos);
             }
 
-            // 3. Deletar os registros das fotos no MongoDB
-            await GaleriaFoto.deleteMany({ eventoId: id });
-
-            // 4. Deletar o evento
+            // Deletar o evento
             const eventoRemovido = await GaleriaEvento.findByIdAndDelete(id);
 
             if (!eventoRemovido) {
