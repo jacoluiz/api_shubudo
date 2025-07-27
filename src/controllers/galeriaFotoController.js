@@ -22,9 +22,7 @@ class GaleriaFotoController {
 
     static async enviarFoto(req, res) {
         try {
-            const files = Array.isArray(req.files?.foto)
-                ? req.files.foto
-                : [req.files?.foto].filter(Boolean);
+            const files = req.files; // simples e direto
 
             const { eventoId } = req.params;
             const { academiaId, usuarioId } = req.body;
