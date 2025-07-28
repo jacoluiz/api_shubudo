@@ -21,39 +21,56 @@ class GaleriaFotoController {
     }
 
     static async enviarFoto(req, res) {
+        console.log("📥 [API] Iniciando upload de fotos");
+
         try {
             const files = req.files;
-
             const { eventoId } = req.params;
             const { academiaId, usuarioId } = req.body;
 
+            console.log("🧾 Dados recebidos:");
+            console.log("  - eventoId:", eventoId);
+            console.log("  - academiaId:", academiaId);
+            console.log("  - usuarioId:", usuarioId);
+            console.log("  - files:", files?.length || 0);
+
             if (!files || files.length === 0 || !eventoId || !academiaId || !usuarioId) {
+                console.warn("⚠️ Dados incompletos para envio das fotos");
                 return res.status(400).json({ message: "Dados incompletos para envio das fotos" });
             }
 
             const novasFotos = [];
 
-            // ⛳️ Upload das fotos no S3
-            for (const file of files) {
-                const s3Path = `galeria/${academiaId}/${eventoId}/${Date.now()}`;
+            for (const [index, file] of files.entries()) {
+                try {
+                    console.log(`📤 Enviando foto ${index + 1} para o S3...`);
+                    const s3Path = `galeria/${academiaId}/${eventoId}/${Date.now()}`;
 
-                const uploadResult = await s3.upload({
-                    Bucket: process.env.AWS_BUCKET_NAME,
-                    Key: s3Path,
-                    Body: file.buffer,
-                    ContentType: file.mimetype
-                }).promise();
+                    const uploadResult = await s3.upload({
+                        Bucket: process.env.AWS_BUCKET_NAME,
+                        Key: s3Path,
+                        Body: file.buffer,
+                        ContentType: file.mimetype
+                    }).promise();
 
-                const novaFoto = await GaleriaFoto.create({
-                    eventoId: eventoId,
-                    url: uploadResult.Location,
-                    uploadedBy: usuarioId
-                });
+                    console.log("✅ Upload S3 concluído:", uploadResult.Location);
 
-                novasFotos.push(novaFoto);
+                    const novaFoto = await GaleriaFoto.create({
+                        eventoId,
+                        url: uploadResult.Location,
+                        uploadedBy: usuarioId
+                    });
+
+                    console.log("🖼️ Foto salva no banco:", novaFoto._id);
+
+                    novasFotos.push(novaFoto);
+                } catch (uploadErr) {
+                    console.error(`❌ Erro ao processar a foto ${index + 1}:`, uploadErr.message);
+                }
             }
 
-            // 🔔 Enviar push notificações
+            console.log("🔔 Enviando notificações push...");
+
             const usuarios = await Usuario.find({ fcmToken: { $ne: null } });
 
             for (const usuario of usuarios) {
@@ -63,14 +80,13 @@ class GaleriaFotoController {
                         "Novas fotos na galeria!",
                         "Momentos incríveis foram adicionados. Vá conferir!"
                     );
+                    console.log(`📲 Notificação enviada para ${usuario.email}`);
                 } catch (err) {
                     if (
                         err.code === "messaging/registration-token-not-registered" ||
                         err.errorInfo?.code === "messaging/registration-token-not-registered"
                     ) {
                         console.warn(`⚠️ Token inválido detectado: ${usuario.fcmToken}`);
-
-                        // (Opcional) Remover token inválido do banco
                         await Usuario.findByIdAndUpdate(usuario._id, {
                             $unset: { fcmToken: "" }
                         });
@@ -80,16 +96,18 @@ class GaleriaFotoController {
                 }
             }
 
+            console.log("✅ Upload finalizado com sucesso. Total:", novasFotos.length);
+
             res.status(201).json({
                 message: "Fotos enviadas com sucesso",
                 data: novasFotos
             });
 
         } catch (err) {
+            console.error("🔥 Erro inesperado ao enviar fotos:", err);
             res.status(500).json({ message: "Erro ao enviar fotos", error: err.message });
         }
     }
-
 
     static async deletarFotos(req, res) {
         try {
