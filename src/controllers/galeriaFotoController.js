@@ -1,6 +1,7 @@
 import GaleriaFoto from "../models/galeriaFotoModel.js";
 import Usuario from "../models/usuarioModel.js";
 import AWS from "aws-sdk";
+import Evento from "../models/galeriaEventoModel.js";
 import { enviarPushParaUsuario } from "./notificacaoController.js";
 
 const s3 = new AWS.S3({
@@ -27,6 +28,10 @@ class GaleriaFotoController {
             const files = req.files;
             const { eventoId } = req.params;
             const { academiaId, usuarioId } = req.body;
+            const evento = await Evento.findById(eventoId);
+            if (!evento) {
+                return res.status(404).json({ message: "Evento não encontrado" });
+            }
 
             console.log("🧾 Dados recebidos:");
             console.log("  - eventoId:", eventoId);
@@ -72,13 +77,15 @@ class GaleriaFotoController {
             console.log("🔔 Enviando notificações push...");
 
             const usuarios = await Usuario.find({ fcmToken: { $ne: null } });
+            const titulo = `Novas fotos em "${evento.nome}"`;
+            const corpo = `Momentos incríveis foram adicionados ao álbun "${evento.nome}". Vá conferir!`;
 
             for (const usuario of usuarios) {
                 try {
                     await enviarPushParaUsuario(
                         usuario.fcmToken,
-                        "Novas fotos na galeria!",
-                        "Momentos incríveis foram adicionados. Vá conferir!"
+                        titulo,
+                        corpo
                     );
                     console.log(`📲 Notificação enviada para ${usuario.email}`);
                 } catch (err) {
