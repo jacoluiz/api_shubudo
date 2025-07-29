@@ -33,12 +33,6 @@ class GaleriaFotoController {
                 return res.status(404).json({ message: "Evento não encontrado" });
             }
 
-            console.log("🧾 Dados recebidos:");
-            console.log("  - eventoId:", eventoId);
-            console.log("  - academiaId:", academiaId);
-            console.log("  - usuarioId:", usuarioId);
-            console.log("  - files:", files?.length || 0);
-
             if (!files || files.length === 0 || !eventoId || !academiaId || !usuarioId) {
                 console.warn("⚠️ Dados incompletos para envio das fotos");
                 return res.status(400).json({ message: "Dados incompletos para envio das fotos" });
@@ -78,7 +72,7 @@ class GaleriaFotoController {
 
             const usuarios = await Usuario.find({ fcmToken: { $ne: null } });
             const titulo = `Novas fotos em "${evento.nome}"`;
-            const corpo = `Momentos incríveis foram adicionados ao álbun "${evento.nome}". Vá conferir!`;
+            const corpo = `Momentos incríveis foram adicionados ao álbun "${evento.nome}". Vá conferir!`;''
 
             for (const usuario of usuarios) {
                 try {
