@@ -14,8 +14,9 @@ class RelatorioController {
         porFaixa[faixa].push(user);
       }
 
-      const filas = "AB".split(""); // Pode ajustar conforme necessário
+      const filas = "AB".split("");
       const cones = [1, 2, 3];
+      const totalComb = filas.length * cones.length;
 
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet("Organização");
@@ -31,21 +32,25 @@ class RelatorioController {
       ];
 
       for (const [faixa, lista] of Object.entries(porFaixa)) {
-        // Ordenar por academia, depois por altura
-        const ordenado = lista
-          .sort((a, b) => {
-            const ac = (a.academia || "").localeCompare(b.academia || "");
-            if (ac !== 0) return ac;
-            return (a.altura || 999) - (b.altura || 999);
-          });
+        // Ordenar por academia (para agrupar visualmente), depois por altura
+        const ordenado = lista.sort((a, b) => {
+          const ac = (a.academia || "").localeCompare(b.academia || "");
+          if (ac !== 0) return ac;
+          return (a.altura || 999) - (b.altura || 999);
+        });
 
         let chamada = 1;
-        let filaIndex = 0;
-        let coneIndex = 0;
-        const totalComb = filas.length * cones.length;
         let posicao = 0;
 
         for (const usuario of ordenado) {
+          // Cálculo da posição relativa
+          const index = posicao % totalComb;
+          const chamadaAtual = Math.floor(posicao / totalComb) + 1;
+
+          // Padrão: 1A, 2A, 3A, 1B, 2B, 3B...
+          const filaIndex = Math.floor(index / cones.length);
+          const coneIndex = index % cones.length;
+
           const fila = filas[filaIndex];
           const cone = cones[coneIndex];
 
@@ -56,22 +61,10 @@ class RelatorioController {
             altura: usuario.altura || "",
             cone,
             fila,
-            chamada: `Chamada ${chamada}`
+            chamada: `Chamada ${chamadaAtual}`
           });
 
-          // Atualizar posição
           posicao++;
-          if (posicao % totalComb === 0) {
-            chamada++;
-            filaIndex = 0;
-            coneIndex = 0;
-          } else {
-            coneIndex++;
-            if (coneIndex >= cones.length) {
-              coneIndex = 0;
-              filaIndex++;
-            }
-          }
         }
       }
 
