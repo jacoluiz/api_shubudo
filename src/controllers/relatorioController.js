@@ -56,7 +56,6 @@ class RelatorioController {
 
             sheet.addRow({
               nome: usuario.nome,
-              email: usuario.email,
               academia: usuario.academia || "",
               corFaixa: faixa,
               altura: usuario.altura || "",
