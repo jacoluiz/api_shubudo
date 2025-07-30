@@ -2,90 +2,95 @@ import Usuario from "../models/usuarioModel.js";
 import ExcelJS from "exceljs";
 
 class RelatorioController {
-    static async gerarRelatorioOrganizado(req, res) {
-        try {
-            const usuarios = await Usuario.find({}).lean();
+  static async gerarRelatorioOrganizado(req, res) {
+    try {
+      const usuarios = await Usuario.find({}).lean();
 
-            // Agrupar por faixa
-            const porFaixa = {};
-            for (const user of usuarios) {
-                const faixa = user.corFaixa || "Sem Faixa";
-                if (!porFaixa[faixa]) porFaixa[faixa] = [];
-                porFaixa[faixa].push(user);
-            }
+      // Agrupar por faixa
+      const porFaixa = {};
+      for (const user of usuarios) {
+        const faixa = user.corFaixa || "Sem Faixa";
+        if (!porFaixa[faixa]) porFaixa[faixa] = [];
+        porFaixa[faixa].push(user);
+      }
 
-            const filas = "AB".split("");
-            const cones = [1, 2, 3];
-            const totalComb = filas.length * cones.length;
+      const filas = "AB".split("");
+      const cones = [1, 2, 3];
+      const totalComb = filas.length * cones.length;
 
-            const workbook = new ExcelJS.Workbook();
-            const sheet = workbook.addWorksheet("Organização");
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet("Organização");
 
-            sheet.columns = [
-                { header: "Nome", key: "nome", width: 30 },
-                { header: "Academia", key: "academia", width: 25 },
-                { header: "Faixa", key: "corFaixa", width: 15 },
-                { header: "Altura (cm)", key: "altura", width: 15 },
-                { header: "Cone", key: "cone", width: 10 },
-                { header: "Fila", key: "fila", width: 10 },
-                { header: "Chamada", key: "chamada", width: 15 },
-            ];
+      sheet.columns = [
+        { header: "Nome", key: "nome", width: 30 },
+        { header: "Academia", key: "academia", width: 25 },
+        { header: "Faixa", key: "corFaixa", width: 15 },
+        { header: "Altura (cm)", key: "altura", width: 15 },
+        { header: "Cone", key: "cone", width: 10 },
+        { header: "Fila", key: "fila", width: 10 },
+        { header: "Chamada", key: "chamada", width: 15 },
+      ];
 
-            for (const [faixa, lista] of Object.entries(porFaixa)) {
-                // Ordenar por academia (para agrupar visualmente), depois por altura
-                const ordenado = lista.sort((a, b) => {
-                    const alturaDiff = (a.altura || 999) - (b.altura || 999);
-                    if (alturaDiff !== 0) return alturaDiff;
-                    return (a.academia || "").localeCompare(b.academia || "");
-                });
+      for (const [faixa, lista] of Object.entries(porFaixa)) {
+        // Passo 1: ordenar por altura (mais baixos primeiro)
+        const ordenadoPorAltura = [...lista].sort((a, b) => (a.altura || 999) - (b.altura || 999));
 
-                let chamada = 1;
-                let posicao = 0;
-
-                for (const usuario of ordenado) {
-                    // Cálculo da posição relativa
-                    const index = posicao % totalComb;
-                    const chamadaAtual = Math.floor(posicao / totalComb) + 1;
-
-                    // Padrão: 1A, 2A, 3A, 1B, 2B, 3B...
-                    const filaIndex = Math.floor(index / cones.length);
-                    const coneIndex = index % cones.length;
-
-                    const fila = filas[filaIndex];
-                    const cone = cones[coneIndex];
-
-                    sheet.addRow({
-                        nome: usuario.nome,
-                        academia: usuario.academia || "",
-                        corFaixa: faixa,
-                        altura: usuario.altura || "",
-                        cone,
-                        fila,
-                        chamada: `Chamada ${chamadaAtual}`
-                    });
-
-                    posicao++;
-                }
-            }
-
-            res.setHeader(
-                "Content-Type",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            );
-            res.setHeader(
-                "Content-Disposition",
-                "attachment; filename=relatorio-organizado.xlsx"
-            );
-
-            await workbook.xlsx.write(res);
-            res.status(200).end();
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                message: `${error.message} - Erro ao gerar relatório`
-            });
+        // Passo 2: agrupar por academia para manter visual próximo
+        const academiasMap = {};
+        for (const user of ordenadoPorAltura) {
+          const academia = user.academia || "Sem Academia";
+          if (!academiasMap[academia]) academiasMap[academia] = [];
+          academiasMap[academia].push(user);
         }
+
+        // Passo 3: mesclar todos mantendo a ordem de altura e visual por academia
+        const ordenado = Object.values(academiasMap).flat();
+
+        // Distribuição
+        let posicao = 0;
+
+        for (const usuario of ordenado) {
+          const index = posicao % totalComb;
+          const chamadaAtual = Math.floor(posicao / totalComb) + 1;
+
+          const filaIndex = Math.floor(index / cones.length);
+          const coneIndex = index % cones.length;
+
+          const fila = filas[filaIndex];
+          const cone = cones[coneIndex];
+
+          sheet.addRow({
+            nome: usuario.nome,
+            academia: usuario.academia || "",
+            corFaixa: faixa,
+            altura: usuario.altura || "",
+            cone,
+            fila,
+            chamada: `Chamada ${chamadaAtual}`
+          });
+
+          posicao++;
+        }
+      }
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        "attachment; filename=relatorio-organizado.xlsx"
+      );
+
+      await workbook.xlsx.write(res);
+      res.status(200).end();
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        message: `${error.message} - Erro ao gerar relatório`
+      });
     }
+  }
 }
 
 export default RelatorioController;
