@@ -19,6 +19,7 @@ import notificacoes from "./notificacoesRoutes.js";
 import academia from "./academiaRoute.js";
 import galeriaRoutes from "./galeriaRoute.js";
 import parceiroRoutes from "./parceirosRoute.js";
+import relatorioRoutes from "./relatorioRoute.js";
 
 const routes = (app) => {
     app.use(express.json(), movimento);
@@ -41,6 +42,7 @@ const routes = (app) => {
     app.use(express.json(), academia);
     app.use(express.json(), galeriaRoutes);
     app.use(express.json(), parceiroRoutes);
+    app.use(express.json(), relatorioRoutes);
 
 };
 
