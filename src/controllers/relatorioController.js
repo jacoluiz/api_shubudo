@@ -32,16 +32,16 @@ class RelatorioController {
       ];
 
       for (const [faixa, lista] of Object.entries(porFaixa)) {
-        // Ordenar globalmente por altura (e usar academia como critério de desempate)
+        // Ordenar por altura (asc), depois por nome da academia (para agrupar visual)
         const ordenado = lista.sort((a, b) => {
-          const alturaA = a.altura || 999;
-          const alturaB = b.altura || 999;
+          const alturaA = a.altura ?? 999;
+          const alturaB = b.altura ?? 999;
           if (alturaA !== alturaB) return alturaA - alturaB;
           return (a.academia || "").localeCompare(b.academia || "");
         });
 
-        // Distribuição contínua
         let posicao = 0;
+
         for (const usuario of ordenado) {
           const index = posicao % totalComb;
           const chamadaAtual = Math.floor(posicao / totalComb) + 1;
@@ -59,7 +59,7 @@ class RelatorioController {
             altura: usuario.altura || "",
             cone,
             fila,
-            chamada: `Chamada ${chamadaAtual}`,
+            chamada: `Chamada ${chamadaAtual}`
           });
 
           posicao++;
