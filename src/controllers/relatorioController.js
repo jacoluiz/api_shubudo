@@ -12,7 +12,7 @@ function alturaToCm(valor) {
 }
 
 class RelatorioController {
-  static async gerarRelatorioOrganizado(req, res) {
+  static async gerarFilaEConeParaExame(req, res) {
     try {
       const usuarios = await Usuario.find({}).lean();
 
@@ -77,12 +77,12 @@ class RelatorioController {
           const index = pos % totalComb;
           const chamadaAtual = Math.floor(pos / totalComb) + 1;
 
-          // padrão: 1A, 2A, 3A, 1B, 2B, 3B...
-          const filaIndex = Math.floor(index / cones.length);
-          const coneIndex = index % cones.length;
+          const coneIndex = Math.floor(index / filas.length) % cones.length;
+          const filaIndex = index % filas.length;
 
-          const fila = filas[filaIndex];
           const cone = cones[coneIndex];
+          const fila = filas[filaIndex];
+
 
           sheet.addRow({
             nome: u.nome,
