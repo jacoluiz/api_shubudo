@@ -14,8 +14,7 @@ class RelatorioController {
         porFaixa[faixa].push(user);
       }
 
-      // Fila: A-B, Cone: 1-3
-      const filas = "AB".split("");
+      const filas = "AB".split(""); // Pode ajustar conforme necessário
       const cones = [1, 2, 3];
 
       const workbook = new ExcelJS.Workbook();
@@ -32,50 +31,45 @@ class RelatorioController {
       ];
 
       for (const [faixa, lista] of Object.entries(porFaixa)) {
-        // Agrupar por academia
-        const porAcademia = {};
-        for (const user of lista) {
-          const academia = user.academia || "Sem Academia";
-          if (!porAcademia[academia]) porAcademia[academia] = [];
-          porAcademia[academia].push(user);
-        }
+        // Ordenar por academia, depois por altura
+        const ordenado = lista
+          .sort((a, b) => {
+            const ac = (a.academia || "").localeCompare(b.academia || "");
+            if (ac !== 0) return ac;
+            return (a.altura || 999) - (b.altura || 999);
+          });
 
-        for (const academia in porAcademia) {
-          const grupo = porAcademia[academia];
-          grupo.sort((a, b) => (a.altura || 999) - (b.altura || 999)); // Mais baixos primeiro
+        let chamada = 1;
+        let filaIndex = 0;
+        let coneIndex = 0;
+        const totalComb = filas.length * cones.length;
+        let posicao = 0;
 
-          let chamada = 1;
-          let filaIndex = 0;
-          let coneIndex = 0;
-          const totalComb = filas.length * cones.length;
-          let posicao = 0;
+        for (const usuario of ordenado) {
+          const fila = filas[filaIndex];
+          const cone = cones[coneIndex];
 
-          for (const usuario of grupo) {
-            const fila = filas[filaIndex];
-            const cone = cones[coneIndex];
+          sheet.addRow({
+            nome: usuario.nome,
+            academia: usuario.academia || "",
+            corFaixa: faixa,
+            altura: usuario.altura || "",
+            cone,
+            fila,
+            chamada: `Chamada ${chamada}`
+          });
 
-            sheet.addRow({
-              nome: usuario.nome,
-              academia: usuario.academia || "",
-              corFaixa: faixa,
-              altura: usuario.altura || "",
-              cone,
-              fila,
-              chamada: `Chamada ${chamada}`
-            });
-
-            // Atualizar posição
-            posicao++;
-            if (posicao % totalComb === 0) {
-              chamada++;
-              filaIndex = 0;
+          // Atualizar posição
+          posicao++;
+          if (posicao % totalComb === 0) {
+            chamada++;
+            filaIndex = 0;
+            coneIndex = 0;
+          } else {
+            coneIndex++;
+            if (coneIndex >= cones.length) {
               coneIndex = 0;
-            } else {
-              coneIndex++;
-              if (coneIndex >= cones.length) {
-                coneIndex = 0;
-                filaIndex++;
-              }
+              filaIndex++;
             }
           }
         }
