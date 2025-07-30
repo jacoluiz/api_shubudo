@@ -83,7 +83,6 @@ class RelatorioController {
           const cone = cones[coneIndex];
           const fila = filas[filaIndex];
 
-
           sheet.addRow({
             nome: u.nome,
             academia: u.academia || "",
