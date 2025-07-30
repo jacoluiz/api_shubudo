@@ -2,16 +2,13 @@ import Usuario from "../models/usuarioModel.js";
 import ExcelJS from "exceljs";
 
 function alturaToCm(valor) {
-  // Retorna número em centímetros ou +Infinity (para ir ao final)
-  if (valor === null || valor === undefined || valor === "") return Number.POSITIVE_INFINITY;
-
-  // transforma em string, troca vírgula por ponto e remove espaços
+  if (valor === null || valor === undefined || valor === "") {
+    return Number.POSITIVE_INFINITY; // vai para o final
+  }
   const s = String(valor).replace(",", ".").trim();
   const n = parseFloat(s);
   if (Number.isNaN(n)) return Number.POSITIVE_INFINITY;
-
-  // se for < 3.5, assumimos metros (ex: 1.73), caso contrário já está em cm (ex: 173)
-  return n < 3.5 ? Math.round(n * 100) : Math.round(n);
+  return n < 3.5 ? Math.round(n * 100) : Math.round(n); // metros -> cm
 }
 
 class RelatorioController {
@@ -27,8 +24,8 @@ class RelatorioController {
         porFaixa[faixa].push(u);
       }
 
-      const filas = ["A", "B"];      // ajuste se quiser mais filas
-      const cones = [1, 2, 3];       // ajuste se quiser mais cones
+      const filas = ["A", "B"];     // ajuste se quiser mais filas
+      const cones = [1, 2, 3];      // ajuste se quiser mais cones
       const totalComb = filas.length * cones.length;
 
       const workbook = new ExcelJS.Workbook();
@@ -45,17 +42,35 @@ class RelatorioController {
       ];
 
       for (const [faixa, lista] of Object.entries(porFaixa)) {
-        // 1) Ordenar por altura (cm) crescente. Empate: academia, depois nome.
-        const ordenado = [...lista].sort((a, b) => {
-          const ha = alturaToCm(a.altura);
-          const hb = alturaToCm(b.altura);
-          if (ha !== hb) return ha - hb;
-          const acad = (a.academia || "").localeCompare(b.academia || "");
-          if (acad !== 0) return acad;
-          return (a.nome || "").localeCompare(b.nome || "");
-        });
+        // 1) Agrupar por academia
+        const porAcademia = new Map();
+        for (const u of lista) {
+          const acad = u.academia || "Sem Academia";
+          if (!porAcademia.has(acad)) porAcademia.set(acad, []);
+          porAcademia.get(acad).push(u);
+        }
 
-        // 2) Distribuir cone/fila/chamada sobre a lista já ordenada
+        // 2) Ordenar cada academia por altura crescente (empate: nome)
+        for (const [acad, arr] of porAcademia.entries()) {
+          arr.sort((a, b) => {
+            const ha = alturaToCm(a.altura);
+            const hb = alturaToCm(b.altura);
+            if (ha !== hb) return ha - hb;
+            return (a.nome || "").localeCompare(b.nome || "");
+          });
+        }
+
+        // 3) Ordenar as academias por nome e concatenar, mantendo cada bloco junto
+        const academiasOrdenadas = Array.from(porAcademia.keys()).sort((a, b) =>
+          a.localeCompare(b)
+        );
+
+        const ordenado = [];
+        for (const acad of academiasOrdenadas) {
+          ordenado.push(...porAcademia.get(acad));
+        }
+
+        // 4) Distribuir cone/fila/chamada sobre a lista concatenada (sem reiniciar por academia)
         for (let pos = 0; pos < ordenado.length; pos++) {
           const u = ordenado[pos];
 
@@ -69,8 +84,6 @@ class RelatorioController {
           const fila = filas[filaIndex];
           const cone = cones[coneIndex];
 
-          // exibimos a altura como veio (para manter o formato do banco),
-          // mas a ordenação foi feita com a altura normalizada
           sheet.addRow({
             nome: u.nome,
             academia: u.academia || "",
