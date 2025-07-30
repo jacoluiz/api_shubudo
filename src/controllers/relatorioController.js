@@ -1,6 +1,19 @@
 import Usuario from "../models/usuarioModel.js";
 import ExcelJS from "exceljs";
 
+function alturaToCm(valor) {
+  // Retorna número em centímetros ou +Infinity (para ir ao final)
+  if (valor === null || valor === undefined || valor === "") return Number.POSITIVE_INFINITY;
+
+  // transforma em string, troca vírgula por ponto e remove espaços
+  const s = String(valor).replace(",", ".").trim();
+  const n = parseFloat(s);
+  if (Number.isNaN(n)) return Number.POSITIVE_INFINITY;
+
+  // se for < 3.5, assumimos metros (ex: 1.73), caso contrário já está em cm (ex: 173)
+  return n < 3.5 ? Math.round(n * 100) : Math.round(n);
+}
+
 class RelatorioController {
   static async gerarRelatorioOrganizado(req, res) {
     try {
@@ -8,14 +21,14 @@ class RelatorioController {
 
       // Agrupar por faixa
       const porFaixa = {};
-      for (const user of usuarios) {
-        const faixa = user.corFaixa || "Sem Faixa";
+      for (const u of usuarios) {
+        const faixa = u.corFaixa || "Sem Faixa";
         if (!porFaixa[faixa]) porFaixa[faixa] = [];
-        porFaixa[faixa].push(user);
+        porFaixa[faixa].push(u);
       }
 
-      const filas = "AB".split("");
-      const cones = [1, 2, 3];
+      const filas = ["A", "B"];      // ajuste se quiser mais filas
+      const cones = [1, 2, 3];       // ajuste se quiser mais cones
       const totalComb = filas.length * cones.length;
 
       const workbook = new ExcelJS.Workbook();
@@ -32,37 +45,41 @@ class RelatorioController {
       ];
 
       for (const [faixa, lista] of Object.entries(porFaixa)) {
-        // Ordenar por altura (asc), depois por nome da academia (para agrupar visual)
-        const ordenado = lista.sort((a, b) => {
-          const alturaA = a.altura ?? 999;
-          const alturaB = b.altura ?? 999;
-          if (alturaA !== alturaB) return alturaA - alturaB;
-          return (a.academia || "").localeCompare(b.academia || "");
+        // 1) Ordenar por altura (cm) crescente. Empate: academia, depois nome.
+        const ordenado = [...lista].sort((a, b) => {
+          const ha = alturaToCm(a.altura);
+          const hb = alturaToCm(b.altura);
+          if (ha !== hb) return ha - hb;
+          const acad = (a.academia || "").localeCompare(b.academia || "");
+          if (acad !== 0) return acad;
+          return (a.nome || "").localeCompare(b.nome || "");
         });
 
-        let posicao = 0;
+        // 2) Distribuir cone/fila/chamada sobre a lista já ordenada
+        for (let pos = 0; pos < ordenado.length; pos++) {
+          const u = ordenado[pos];
 
-        for (const usuario of ordenado) {
-          const index = posicao % totalComb;
-          const chamadaAtual = Math.floor(posicao / totalComb) + 1;
+          const index = pos % totalComb;
+          const chamadaAtual = Math.floor(pos / totalComb) + 1;
 
+          // padrão: 1A, 2A, 3A, 1B, 2B, 3B...
           const filaIndex = Math.floor(index / cones.length);
           const coneIndex = index % cones.length;
 
           const fila = filas[filaIndex];
           const cone = cones[coneIndex];
 
+          // exibimos a altura como veio (para manter o formato do banco),
+          // mas a ordenação foi feita com a altura normalizada
           sheet.addRow({
-            nome: usuario.nome,
-            academia: usuario.academia || "",
+            nome: u.nome,
+            academia: u.academia || "",
             corFaixa: faixa,
-            altura: usuario.altura || "",
+            altura: u.altura ?? "",
             cone,
             fila,
-            chamada: `Chamada ${chamadaAtual}`
+            chamada: `Chamada ${chamadaAtual}`,
           });
-
-          posicao++;
         }
       }
 
@@ -72,16 +89,14 @@ class RelatorioController {
       );
       res.setHeader(
         "Content-Disposition",
-        "attachment; filename=relatorio-organizado.xlsx"
+        'attachment; filename="relatorio-organizado.xlsx"'
       );
 
       await workbook.xlsx.write(res);
       res.status(200).end();
     } catch (error) {
       console.error(error);
-      res.status(500).json({
-        message: `${error.message} - Erro ao gerar relatório`
-      });
+      res.status(500).json({ message: `${error.message} - Erro ao gerar relatório` });
     }
   }
 }
