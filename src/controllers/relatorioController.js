@@ -1,5 +1,5 @@
 import Usuario from "../models/usuarioModel.js";
-import Evento from "../models/eventoModel.js";
+import Evento from "../models/dataModel.js";
 import ExcelJS from "exceljs";
 import path from "path";
 import fs from "fs";
