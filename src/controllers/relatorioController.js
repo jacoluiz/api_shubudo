@@ -1,5 +1,8 @@
 import Usuario from "../models/usuarioModel.js";
+import Evento from "../models/eventoModel.js";
 import ExcelJS from "exceljs";
+import path from "path";
+import fs from "fs";
 
 function alturaToCm(valor) {
   if (valor === null || valor === undefined || valor === "") {
@@ -12,6 +15,71 @@ function alturaToCm(valor) {
 }
 
 class RelatorioController {
+
+  static async gerarRelatorioExamePorEvento(req, res) {
+    try {
+      const { eventoId } = req.params;
+
+      const evento = await Evento.findById(eventoId).lean();
+      if (!evento || !Array.isArray(evento.confirmados)) {
+        return res.status(404).json({ message: "Evento não encontrado ou sem confirmados" });
+      }
+
+      const emailsConfirmados = evento.confirmados;
+      const usuarios = await Usuario.find({ email: { $in: emailsConfirmados } }).lean();
+
+      const hoje = new Date();
+
+      const usuariosFiltrados = usuarios.filter((u) => {
+        const nascimento = new Date(u.idade); // campo "idade" é data de nascimento
+        const idade = hoje.getFullYear() - nascimento.getFullYear();
+        const mesAtual = hoje.getMonth();
+        const mesNascimento = nascimento.getMonth();
+        const diaAtual = hoje.getDate();
+        const diaNascimento = nascimento.getDate();
+
+        // Ajuste se ainda não fez aniversário este ano
+        if (
+          mesNascimento > mesAtual ||
+          (mesNascimento === mesAtual && diaNascimento > diaAtual)
+        ) {
+          return idade - 1 >= 6;
+        }
+
+        return idade >= 6;
+      });
+
+      // Caminho absoluto do template
+      const caminhoTemplate = path.resolve("src/templates/exame.xlsx");
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(caminhoTemplate);
+
+      const sheet = workbook.getWorksheet(1); // primeira aba da planilha
+
+      usuariosFiltrados.forEach((usuario, index) => {
+        const rowNumber = 8 + index;
+        const row = sheet.getRow(rowNumber);
+
+        row.getCell("A").value = index + 1; // número
+        row.getCell("B").value = usuario.nome;
+        row.getCell("C").value = usuario.corFaixa || "";
+        row.getCell("D").value = usuario.altura || "";
+        row.getCell("E").value = usuario.lesaoOuLaudosMedicos || "";
+
+        row.commit();
+      });
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", 'attachment; filename="exame-evento.xlsx"');
+
+      await workbook.xlsx.write(res);
+      res.status(200).end();
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: `${error.message} - Erro ao gerar planilha de exame` });
+    }
+  }
+
   static async gerarFilaEConeParaExame(req, res) {
     try {
       const usuarios = await Usuario.find({}).lean();

@@ -6,4 +6,7 @@ const router = express.Router();
 
 router.get("/relatorios/organizacao", RelatorioController.gerarFilaEConeParaExame);
 
+// Nova rota para gerar relatório de exame baseado no evento
+router.get("/relatorios/exame/:eventoId", RelatorioController.gerarRelatorioExamePorEvento);
+
 export default router;
