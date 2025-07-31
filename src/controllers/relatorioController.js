@@ -16,111 +16,201 @@ function alturaToCm(valor) {
 
 class RelatorioController {
 
-  static async gerarRelatorioExamePorEvento(req, res) {
-  try {
-    const { eventoId } = req.params;
-    console.log("Recebido eventoId:", eventoId);
+  static async gerarRelatorioPrimeiraInfanciaPorEvento(req, res) {
+    try {
+      const { eventoId } = req.params;
+      console.log("Recebido eventoId:", eventoId);
 
-    const evento = await Evento.findById(eventoId).lean();
-    if (!evento || !Array.isArray(evento.confirmados)) {
-      console.log("Evento não encontrado ou campo confirmados inválido");
-      return res.status(404).json({ message: "Evento não encontrado ou sem confirmados" });
+      const evento = await Evento.findById(eventoId).lean();
+      if (!evento || !Array.isArray(evento.confirmados)) {
+        console.log("Evento não encontrado ou campo confirmados inválido");
+        return res.status(404).json({ message: "Evento não encontrado ou sem confirmados" });
+      }
+
+      const emailsConfirmados = evento.confirmados;
+      console.log("Emails confirmados:", emailsConfirmados);
+
+      const usuarios = await Usuario.find({ email: { $in: emailsConfirmados } }).lean();
+      console.log("Usuários encontrados:", usuarios.length);
+
+      const hoje = new Date();
+      const novaGraduacaoPorIdade = {
+        3: "FAIXA BRANCA 1 MÉRITO",
+        4: "FAIXA BRANCA 2 MÉRITOS",
+        5: "FAIXA BRANCA PONTA AMARELA",
+        6: "FAIXA AMARELA"
+      };
+
+      const usuariosFiltrados = [];
+
+      for (const u of usuarios) {
+        try {
+          const [dia, mes, ano] = u.idade.split("/").map(Number);
+          const nascimento = new Date(ano, mes - 1, dia);
+
+          let idade = hoje.getFullYear() - nascimento.getFullYear();
+          const mesAtual = hoje.getMonth();
+          const mesNascimento = nascimento.getMonth();
+          const diaAtual = hoje.getDate();
+          const diaNascimento = nascimento.getDate();
+
+          if (mesNascimento > mesAtual || (mesNascimento === mesAtual && diaNascimento > diaAtual)) {
+            idade -= 1;
+          }
+
+          console.log(`Usuário: ${u.nome} - Idade calculada: ${idade}`);
+
+          if (idade >= 3 && idade <= 6) {
+            usuariosFiltrados.push({
+              nome: u.nome,
+              faixaAtual: u.corFaixa || "",
+              novaGraduacao: novaGraduacaoPorIdade[idade] || "",
+              obs: ""
+            });
+          }
+        } catch (e) {
+          console.warn(`Erro ao calcular idade para ${u.nome}: ${e.message}`);
+        }
+      }
+
+      console.log("Usuários após filtro por idade <= 6:", usuariosFiltrados.length);
+
+      const caminhoTemplate = path.resolve("src/templates/primeira_infancia_exame.xlsx");
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(caminhoTemplate);
+      const sheet = workbook.getWorksheet(1);
+
+      usuariosFiltrados.forEach((usuario, index) => {
+        const rowNumber = 6 + index;
+        const row = sheet.getRow(rowNumber);
+
+        row.getCell("A").value = index + 1; // Nº
+        row.getCell("B").value = usuario.nome;
+        row.getCell("C").value = usuario.faixaAtual;
+        row.getCell("D").value = usuario.novaGraduacao;
+        row.getCell("E").value = usuario.obs;
+
+        row.commit();
+
+        console.log(`Linha ${rowNumber} preenchida com:`, usuario);
+      });
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", 'attachment; filename="primeira-infancia-exame.xlsx"');
+      await workbook.xlsx.write(res);
+      res.status(200).end();
+    } catch (error) {
+      console.error("Erro ao gerar planilha da 1ª infância:", error);
+      res.status(500).json({ message: `${error.message} - Erro ao gerar planilha da 1ª infância` });
     }
+  }
 
-    const emailsConfirmados = evento.confirmados;
-    console.log("Emails confirmados:", emailsConfirmados);
 
-    const usuarios = await Usuario.find({ email: { $in: emailsConfirmados } }).lean();
-    console.log("Usuários encontrados:", usuarios.length);
-    usuarios.forEach((u) => {
-      console.log(`Usuário: ${u.nome}, Email: ${u.email}, Nascimento: ${u.idade}, Faixa: ${u.corFaixa}`);
-    });
+  static async gerarRelatorioExamePorEvento(req, res) {
+    try {
+      const { eventoId } = req.params;
+      console.log("Recebido eventoId:", eventoId);
 
-    const hoje = new Date();
+      const evento = await Evento.findById(eventoId).lean();
+      if (!evento || !Array.isArray(evento.confirmados)) {
+        console.log("Evento não encontrado ou campo confirmados inválido");
+        return res.status(404).json({ message: "Evento não encontrado ou sem confirmados" });
+      }
 
-    // Faixas permitidas e sua ordem
-    const faixasPermitidas = ["Branca", "Amarela", "Laranja", "Verde", "Roxa"];
-    const ordemFaixas = {
-      "Branca": 1,
-      "Amarela": 2,
-      "Laranja": 3,
-      "Verde": 4,
-      "Roxa": 5
-    };
+      const emailsConfirmados = evento.confirmados;
+      console.log("Emails confirmados:", emailsConfirmados);
 
-    const usuariosFiltrados = usuarios.filter((u) => {
-      try {
-        if (!faixasPermitidas.includes(u.corFaixa)) {
+      const usuarios = await Usuario.find({ email: { $in: emailsConfirmados } }).lean();
+      console.log("Usuários encontrados:", usuarios.length);
+      usuarios.forEach((u) => {
+        console.log(`Usuário: ${u.nome}, Email: ${u.email}, Nascimento: ${u.idade}, Faixa: ${u.corFaixa}`);
+      });
+
+      const hoje = new Date();
+
+      // Faixas permitidas e sua ordem
+      const faixasPermitidas = ["Branca", "Amarela", "Laranja", "Verde", "Roxa"];
+      const ordemFaixas = {
+        "Branca": 1,
+        "Amarela": 2,
+        "Laranja": 3,
+        "Verde": 4,
+        "Roxa": 5
+      };
+
+      const usuariosFiltrados = usuarios.filter((u) => {
+        try {
+          if (!faixasPermitidas.includes(u.corFaixa)) {
+            return false;
+          }
+
+          const [dia, mes, ano] = u.idade.split("/").map(Number);
+          const nascimento = new Date(ano, mes - 1, dia);
+
+          let idade = hoje.getFullYear() - nascimento.getFullYear();
+          const mesAtual = hoje.getMonth();
+          const mesNascimento = nascimento.getMonth();
+          const diaAtual = hoje.getDate();
+          const diaNascimento = nascimento.getDate();
+
+          if (mesNascimento > mesAtual || (mesNascimento === mesAtual && diaNascimento > diaAtual)) {
+            idade -= 1;
+          }
+
+          console.log(`Usuário: ${u.nome} - Idade calculada: ${idade}`);
+
+          return idade > 6; // Exclui quem tem até 6 anos
+        } catch (e) {
+          console.warn(`Erro ao calcular idade para ${u.nome}: ${e.message}`);
           return false;
         }
-
-        const [dia, mes, ano] = u.idade.split("/").map(Number);
-        const nascimento = new Date(ano, mes - 1, dia);
-
-        let idade = hoje.getFullYear() - nascimento.getFullYear();
-        const mesAtual = hoje.getMonth();
-        const mesNascimento = nascimento.getMonth();
-        const diaAtual = hoje.getDate();
-        const diaNascimento = nascimento.getDate();
-
-        if (mesNascimento > mesAtual || (mesNascimento === mesAtual && diaNascimento > diaAtual)) {
-          idade -= 1;
-        }
-
-        console.log(`Usuário: ${u.nome} - Idade calculada: ${idade}`);
-
-        return idade > 6; // Exclui quem tem até 6 anos
-      } catch (e) {
-        console.warn(`Erro ao calcular idade para ${u.nome}: ${e.message}`);
-        return false;
-      }
-    });
-
-    console.log("Usuários após filtros:", usuariosFiltrados.length);
-
-    // Ordenar por faixa (usando o índice do mapa ordemFaixas)
-    usuariosFiltrados.sort((a, b) => {
-      const ordemA = ordemFaixas[a.corFaixa] || 999;
-      const ordemB = ordemFaixas[b.corFaixa] || 999;
-      return ordemA - ordemB;
-    });
-
-    // Carrega o template
-    const caminhoTemplate = path.resolve("src/templates/exame.xlsx");
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile(caminhoTemplate);
-
-    const sheet = workbook.getWorksheet(1); // primeira aba da planilha
-
-    usuariosFiltrados.forEach((usuario, index) => {
-      const rowNumber = 8 + index;
-      const row = sheet.getRow(rowNumber);
-
-      row.getCell("A").value = index + 1; // número
-      row.getCell("B").value = usuario.nome;
-      row.getCell("C").value = usuario.corFaixa || "";
-      row.getCell("D").value = usuario.altura || "";
-      row.getCell("E").value = usuario.lesaoOuLaudosMedicos || "";
-
-      row.commit();
-      console.log(`Linha ${rowNumber} preenchida com:`, {
-        nome: usuario.nome,
-        faixa: usuario.corFaixa,
-        altura: usuario.altura,
-        lesoes: usuario.lesaoOuLaudosMedicos,
       });
-    });
 
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", 'attachment; filename="exame-evento.xlsx"');
+      console.log("Usuários após filtros:", usuariosFiltrados.length);
 
-    await workbook.xlsx.write(res);
-    res.status(200).end();
-  } catch (error) {
-    console.error("Erro ao gerar planilha de exame:", error);
-    res.status(500).json({ message: `${error.message} - Erro ao gerar planilha de exame` });
+      // Ordenar por faixa (usando o índice do mapa ordemFaixas)
+      usuariosFiltrados.sort((a, b) => {
+        const ordemA = ordemFaixas[a.corFaixa] || 999;
+        const ordemB = ordemFaixas[b.corFaixa] || 999;
+        return ordemA - ordemB;
+      });
+
+      // Carrega o template
+      const caminhoTemplate = path.resolve("src/templates/exame.xlsx");
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(caminhoTemplate);
+
+      const sheet = workbook.getWorksheet(1); // primeira aba da planilha
+
+      usuariosFiltrados.forEach((usuario, index) => {
+        const rowNumber = 8 + index;
+        const row = sheet.getRow(rowNumber);
+
+        row.getCell("A").value = index + 1; // número
+        row.getCell("B").value = usuario.nome;
+        row.getCell("C").value = usuario.corFaixa || "";
+        row.getCell("D").value = usuario.altura || "";
+        row.getCell("E").value = usuario.lesaoOuLaudosMedicos || "";
+
+        row.commit();
+        console.log(`Linha ${rowNumber} preenchida com:`, {
+          nome: usuario.nome,
+          faixa: usuario.corFaixa,
+          altura: usuario.altura,
+          lesoes: usuario.lesaoOuLaudosMedicos,
+        });
+      });
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", 'attachment; filename="exame-evento.xlsx"');
+
+      await workbook.xlsx.write(res);
+      res.status(200).end();
+    } catch (error) {
+      console.error("Erro ao gerar planilha de exame:", error);
+      res.status(500).json({ message: `${error.message} - Erro ao gerar planilha de exame` });
+    }
   }
-}
 
 
   static async gerarFilaEConeParaExame(req, res) {

@@ -9,4 +9,7 @@ router.get("/relatorios/organizacao", RelatorioController.gerarFilaEConeParaExam
 // Nova rota para gerar relatório de exame baseado no evento
 router.get("/relatorios/exame/:eventoId", RelatorioController.gerarRelatorioExamePorEvento);
 
+router.get("/relatorios/primeira-infancia/:eventoId", RelatorioController.gerarRelatorioPrimeiraInfanciaPorEvento);
+
+
 export default router;
