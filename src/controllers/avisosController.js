@@ -62,10 +62,22 @@ class AvisoController {
               'Novo aviso disponível',
               'Você tem um novo aviso. Acesse o app para ver.'
             );
+            console.log(`✅ Notificação enviada com sucesso para token: ${token}`);
           } catch (erroNotificacao) {
             console.error(`❌ Erro ao enviar push para token ${token}:`, erroNotificacao.message);
+
+            // Se for token inválido, apenas registra e continua
+            if (erroNotificacao.code === 'messaging/registration-token-not-registered') {
+              console.warn(`⚠️ Token inválido detectado: ${token}`);
+              continue; // ignora e segue
+            } else {
+              // Se for outro erro inesperado, loga e ainda assim continua
+              console.warn("⚠️ Erro inesperado no envio de push:", erroNotificacao);
+              continue;
+            }
           }
         }
+
       } else {
         console.log("⚠️ Nenhum token válido encontrado para envio.");
       }
