@@ -25,49 +25,61 @@ class AvisoController {
       res.status(500).json({ message: `${erro.message} - Erro ao buscar aviso.` });
     }
   }
-
   // Cadastrar um novo aviso
   static async cadastrarAviso(req, res) {
     try {
+      console.log("🔵 [AvisoController] Iniciando cadastro de aviso...");
+      console.log("📦 Payload recebido:", req.body);
+
       const novoAviso = new Aviso(req.body);
       await novoAviso.save();
+      console.log("✅ Aviso salvo no banco com sucesso:", novoAviso._id);
 
       let usuarios = [];
 
-      // Se público-alvo estiver vazio, buscar todos os usuários com token
       if (!novoAviso.publicoAlvo || novoAviso.publicoAlvo.length === 0) {
+        console.log("👥 Nenhum público-alvo especificado. Buscando todos os usuários com fcmToken...");
         usuarios = await Usuario.find({ fcmToken: { $ne: null } });
       } else {
-        // Buscar apenas usuários do público-alvo com token válido
+        console.log("👥 Público-alvo especificado:", novoAviso.publicoAlvo);
         usuarios = await Usuario.find({
           email: { $in: novoAviso.publicoAlvo },
           fcmToken: { $ne: null }
         });
       }
 
-      // Extrair os tokens válidos
-      const tokens = usuarios.map(u => u.fcmToken);
+      console.log(`📲 ${usuarios.length} usuários encontrados com fcmToken válido.`);
 
-      // Disparar as notificações, se houver tokens
+      const tokens = usuarios.map(u => u.fcmToken).filter(Boolean);
+      console.log(`🚀 ${tokens.length} tokens serão usados para envio de push.`);
+
       if (tokens.length > 0) {
         for (const token of tokens) {
-          await enviarPushParaUsuario(
-            token,
-            'Novo aviso disponível',
-            'Você tem um novo aviso. Acesse o app para ver.'
-          );
+          try {
+            console.log(`📤 Enviando push para token: ${token}`);
+            await enviarPushParaUsuario(
+              token,
+              'Novo aviso disponível',
+              'Você tem um novo aviso. Acesse o app para ver.'
+            );
+          } catch (erroNotificacao) {
+            console.error(`❌ Erro ao enviar push para token ${token}:`, erroNotificacao.message);
+          }
         }
+      } else {
+        console.log("⚠️ Nenhum token válido encontrado para envio.");
       }
 
       res.status(201).json({
         message: "Aviso criado com sucesso.",
         aviso: novoAviso,
       });
-
     } catch (erro) {
+      console.error("❌ Erro inesperado ao cadastrar aviso:", erro.message);
       res.status(500).json({ message: `${erro.message} - Erro ao cadastrar aviso.` });
     }
   }
+
 
   // Atualizar aviso por ID via /avisos/:id
   static async atualizarAviso(req, res) {
