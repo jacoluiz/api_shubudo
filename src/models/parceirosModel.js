@@ -6,6 +6,7 @@ const parceiroSchema = new mongoose.Schema({
   localizacao: { type: String }, // opcional
   telefone: { type: String, required: true },
   site: { type: String }, // opcional
+  ramo: { type: String, required: true }, // ramo de atuação
   logomarca: { type: String, required: true }, // URL da logomarca
   imagens: { type: [String], default: [] } // lista de URLs das imagens
 }, { versionKey: false });
