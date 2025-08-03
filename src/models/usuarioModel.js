@@ -16,7 +16,8 @@ const usuarioSchema = new mongoose.Schema({
     tamanhoFaixa: { type: String },
     lesaoOuLaudosMedicos: { type: String },
     registroAKSD: { type: String },
-    fcmToken: { type: String }
+    fcmToken: { type: String },
+    professorEm: { type: [String], default: [] }
 }, { versionKey: false });
 
 const Usuario = mongoose.model("Usuario", usuarioSchema);
