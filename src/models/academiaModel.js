@@ -12,6 +12,7 @@ const filialSchema = new mongoose.Schema({
 const academiaSchema = new mongoose.Schema({
     nome: { type: String, required: true },
     descricao: { type: String },
+    professores: {type: [String],default: []},
     filiais: {
         type: [filialSchema],
         validate: {
