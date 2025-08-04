@@ -13,6 +13,8 @@ const usuarioSchema = new mongoose.Schema({
     status: { type: String, default: "ativo" },
     dan: { type: Number, default: 0 },
     academia: { type: String },
+    academiaId: {type: String},
+    filialId: {type: String},
     tamanhoFaixa: { type: String },
     lesaoOuLaudosMedicos: { type: String },
     registroAKSD: { type: String },
