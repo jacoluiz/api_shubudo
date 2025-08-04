@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import Usuario from "../models/usuarioModel.js";
 
-const SECRET_KEY = process.env.SECRET_KEY;; // Substitua por uma chave segura
+const SECRET_KEY = process.env.SECRET_KEY;;
 
 class UsuarioController {
     static async login(req, res) {
@@ -47,6 +47,23 @@ class UsuarioController {
             res.status(500).json({ message: `${erro.message} - Erro ao listar usuários.` });
         }
     }
+
+    static async listarUsuariosPorAcademia(req, res) {
+        try {
+            const { academiaId } = req.query;
+
+            if (!academiaId) {
+                return res.status(400).json({ message: "Parâmetro 'academiaId' é obrigatório." });
+            }
+
+            const usuarios = await Usuario.find({ academiaId });
+
+            res.status(200).json(usuarios);
+        } catch (erro) {
+            res.status(500).json({ message: `${erro.message} - Erro ao listar usuários por academia.` });
+        }
+    }
+
 
     static async buscarUsuarioPorId(req, res) {
         try {

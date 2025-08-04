@@ -21,6 +21,8 @@ routes.delete("/usuarios/:id", usuarioController.excluirUsuario);
 // Busca a faixa de um usuário (usando ID ou email)
 routes.get("/usuarios/faixa", usuarioController.buscarFaixaDoUsuario);
 
+routes.get("/usuarios/por-academia", usuarioController.listarUsuariosPorAcademia);
+
 routes.post("/usuarios/login", usuarioController.login);
 
 export default routes;
