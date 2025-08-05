@@ -16,21 +16,32 @@ class dateController {
 
   static async criarData(req, res) {
     try {
+      console.log("🔄 Iniciando criação de nova data...");
+      console.log("📦 Payload recebido:", req.body);
+
       const novaData = await DateEvent.create(req.body);
+      console.log("✅ Evento criado com sucesso:", novaData);
 
-      // Buscar todos os usuários com token válido
-      const usuarios = await Usuario.find({ fcmToken: { $ne: null } });
+      const idAcademia = req.body.academia;
+      if (!idAcademia) {
+        throw new Error("O campo 'academia' é obrigatório.");
+      }
 
-      const tokens = usuarios.map(u => u.fcmToken);
+      // Buscar todos os usuários com token válido e academiaId correspondente
+      const usuarios = await Usuario.find({
+        fcmToken: { $ne: null },
+        academiaId: idAcademia
+      });
 
-      if (tokens.length > 0) {
-        for (const token of tokens) {
-          await enviarPushParaUsuario(
-            token,
-            "Novo evento adicionado",
-            "Ei! Tem evento no no aplicativo. Confira!"
-          );
-        }
+      console.log(`🔍 ${usuarios.length} usuários encontrados com fcmToken e academiaId = ${idAcademia}`);
+
+      for (const usuario of usuarios) {
+        console.log(`📲 Enviando notificação para: ${usuario.nome} (${usuario.email}) - token: ${usuario.fcmToken}`);
+        await enviarPushParaUsuario(
+          usuario.fcmToken,
+          "Novo evento adicionado",
+          "Ei! Tem evento novo no aplicativo. Confira!"
+        );
       }
 
       res.status(201).json({
@@ -38,6 +49,8 @@ class dateController {
         data: novaData
       });
     } catch (erro) {
+      console.error("❌ Erro ao criar data:", erro.message);
+      console.error("🪵 Stack trace:", erro.stack);
       res.status(500).json({
         message: `${erro.message} - Erro ao criar data`
       });
