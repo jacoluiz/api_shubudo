@@ -38,7 +38,7 @@ class GaleriaFotoController {
                 return res.status(404).json({ message: "Evento não encontrado" });
             }
 
-            const academiaId = evento.academia; // Usa o academiaId do evento
+            const academiaId = evento.academiaId; // Usa o academiaId do evento
 
             if (!academiaId) {
                 return res.status(400).json({ message: "Evento não possui academia associada" });
