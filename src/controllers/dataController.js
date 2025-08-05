@@ -36,12 +36,25 @@ class dateController {
       console.log(`🔍 ${usuarios.length} usuários encontrados com fcmToken e academiaId = ${idAcademia}`);
 
       for (const usuario of usuarios) {
-        console.log(`📲 Enviando notificação para: ${usuario.nome} (${usuario.email}) - token: ${usuario.fcmToken}`);
-        await enviarPushParaUsuario(
-          usuario.fcmToken,
-          "Novo evento adicionado",
-          "Ei! Tem evento novo no aplicativo. Confira!"
-        );
+        try {
+          console.log(`📲 Enviando notificação para: ${usuario.nome} (${usuario.email}) - token: ${usuario.fcmToken}`);
+          await enviarPushParaUsuario(
+            usuario.fcmToken,
+            "Novo evento adicionado",
+            "Ei! Tem evento novo no aplicativo. Confira!"
+          );
+          console.log(`✅ Notificação enviada com sucesso para token: ${usuario.fcmToken}`);
+        } catch (erroNotificacao) {
+          console.error(`❌ Erro ao enviar push para token ${usuario.fcmToken}:`, erroNotificacao.message);
+
+          if (erroNotificacao.code === 'messaging/registration-token-not-registered') {
+            console.warn(`⚠️ Token inválido detectado: ${usuario.fcmToken}`);
+            continue; // ignora token inválido
+          } else {
+            console.warn("⚠️ Erro inesperado no envio de push:", erroNotificacao);
+            continue; // segue mesmo com erro
+          }
+        }
       }
 
       res.status(201).json({
@@ -56,7 +69,6 @@ class dateController {
       });
     }
   }
-
 
   static async atualizarData(req, res) {
     try {

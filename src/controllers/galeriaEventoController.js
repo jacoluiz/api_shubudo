@@ -24,18 +24,45 @@ class GaleriaEventoController {
 
     static async criarEvento(req, res) {
         try {
+            console.log("🔄 Iniciando criação de novo evento de galeria...");
+            console.log("📦 Payload recebido:", req.body);
+
             const novoEvento = await GaleriaEvento.create(req.body);
+            console.log("✅ Evento da galeria criado com sucesso:", novoEvento);
 
-            // Buscar todos os usuários com token válido
-            const usuarios = await Usuario.find({ fcmToken: { $ne: null } });
-            const tokens = usuarios.map(u => u.fcmToken);
+            const idAcademia = req.body.academiaId;
+            if (!idAcademia) {
+                throw new Error("O campo 'academiaId' é obrigatório no payload.");
+            }
 
-            for (const token of tokens) {
-                await enviarPushParaUsuario(
-                    token,
-                    "Nova galeria adicionada",
-                    "Um novo evento com fotos foi adicionado. Confira!"
-                );
+            // Buscar todos os usuários com token válido e academia correspondente
+            const usuarios = await Usuario.find({
+                fcmToken: { $ne: null },
+                academiaId: idAcademia
+            });
+
+            console.log(`🔍 ${usuarios.length} usuários encontrados com fcmToken e academiaId = ${idAcademia}`);
+
+            for (const usuario of usuarios) {
+                try {
+                    console.log(`📤 Enviando push para: ${usuario.nome} (${usuario.email}) - token: ${usuario.fcmToken}`);
+                    await enviarPushParaUsuario(
+                        usuario.fcmToken,
+                        "Nova galeria adicionada",
+                        "Um novo evento com fotos foi adicionado. Confira!"
+                    );
+                    console.log(`✅ Notificação enviada com sucesso para token: ${usuario.fcmToken}`);
+                } catch (erroNotificacao) {
+                    console.error(`❌ Erro ao enviar push para token ${usuario.fcmToken}:`, erroNotificacao.message);
+
+                    if (erroNotificacao.code === 'messaging/registration-token-not-registered') {
+                        console.warn(`⚠️ Token inválido detectado: ${usuario.fcmToken}`);
+                    } else {
+                        console.warn("⚠️ Erro inesperado no envio de push:", erroNotificacao);
+                    }
+
+                    continue; // ignora erro e segue para os demais
+                }
             }
 
             res.status(201).json({
@@ -43,11 +70,14 @@ class GaleriaEventoController {
                 evento: novoEvento
             });
         } catch (erro) {
+            console.error("❌ Erro ao criar evento da galeria:", erro.message);
+            console.error("🪵 Stack trace:", erro.stack);
             res.status(500).json({
                 message: `${erro.message} - Erro ao criar evento da galeria`
             });
         }
     }
+
 
     static async atualizarEvento(req, res) {
         try {

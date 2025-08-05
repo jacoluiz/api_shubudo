@@ -26,16 +26,22 @@ class GaleriaFotoController {
 
         try {
             const files = req.files;
-            const { eventoId } = req.params;
-            const { academiaId, usuarioId } = req.body;
+            const { eventoId, usuarioId } = { ...req.params, ...req.body };
+
+            if (!files || files.length === 0 || !eventoId || !usuarioId) {
+                console.warn("⚠️ Dados incompletos para envio das fotos");
+                return res.status(400).json({ message: "Dados incompletos para envio das fotos" });
+            }
+
             const evento = await Evento.findById(eventoId);
             if (!evento) {
                 return res.status(404).json({ message: "Evento não encontrado" });
             }
 
-            if (!files || files.length === 0 || !eventoId || !academiaId || !usuarioId) {
-                console.warn("⚠️ Dados incompletos para envio das fotos");
-                return res.status(400).json({ message: "Dados incompletos para envio das fotos" });
+            const academiaId = evento.academia; // Usa o academiaId do evento
+
+            if (!academiaId) {
+                return res.status(400).json({ message: "Evento não possui academia associada" });
             }
 
             const novasFotos = [];
@@ -70,17 +76,17 @@ class GaleriaFotoController {
 
             console.log("🔔 Enviando notificações push...");
 
-            const usuarios = await Usuario.find({ fcmToken: { $ne: null } });
+            const usuarios = await Usuario.find({
+                fcmToken: { $ne: null },
+                academiaId: academiaId
+            });
+
             const titulo = `Novas fotos em "${evento.nome}"`;
-            const corpo = `Momentos incríveis foram adicionados ao álbun "${evento.nome}". Vá conferir!`;''
+            const corpo = `Momentos incríveis foram adicionados ao álbum "${evento.nome}". Vá conferir!`;
 
             for (const usuario of usuarios) {
                 try {
-                    await enviarPushParaUsuario(
-                        usuario.fcmToken,
-                        titulo,
-                        corpo
-                    );
+                    await enviarPushParaUsuario(usuario.fcmToken, titulo, corpo);
                     console.log(`📲 Notificação enviada para ${usuario.email}`);
                 } catch (err) {
                     if (
@@ -109,6 +115,7 @@ class GaleriaFotoController {
             res.status(500).json({ message: "Erro ao enviar fotos", error: err.message });
         }
     }
+
 
     static async deletarFotos(req, res) {
         try {
