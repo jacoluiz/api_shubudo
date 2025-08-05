@@ -7,7 +7,8 @@ const dateSchema = new mongoose.Schema({
   dataFim: { type: Date }, // opcional, caso queira eventos com duração
   criadoPor: { type: String }, // opcional: ID do usuário ou nome,
   local: { type: String },
-  confirmados: { type: [String], default: [] }
+  confirmados: { type: [String], default: [] },
+  academia: { type: String }
 }, { versionKey: false });
 
 const DateEvent = mongoose.model("dates", dateSchema);
