@@ -215,19 +215,53 @@ class RelatorioController {
 
   static async gerarFilaEConeParaExame(req, res) {
     try {
-      const usuarios = await Usuario.find({}).lean();
+      const { eventoId } = req.params;
+      // Query params: ?ateCone=3&ateFila=C
+      const ateCone = Number(req.query.ateCone || 3);
+      const ateFila = String(req.query.ateFila || "B").toUpperCase();
 
-      // Agrupar por faixa
+      if (!eventoId) {
+        return res.status(400).json({ message: "Parâmetro eventoId é obrigatório" });
+      }
+      if (!Number.isFinite(ateCone) || ateCone < 1) {
+        return res.status(400).json({ message: "Parâmetro ateCone inválido" });
+      }
+      if (!/^[A-Z]$/.test(ateFila)) {
+        return res.status(400).json({ message: "Parâmetro ateFila deve ser uma letra (A..Z)" });
+      }
+
+      // Monta listas de cones e filas a partir dos limites
+      const cones = Array.from({ length: ateCone }, (_, i) => i + 1);      // [1..ateCone]
+      const filas = Array.from(
+        { length: ateFila.charCodeAt(0) - "A".charCodeAt(0) + 1 },
+        (_, i) => String.fromCharCode("A".charCodeAt(0) + i)
+      ); // ["A"..ateFila]
+
+      const totalComb = filas.length * cones.length;
+
+      // ---- Evento e presenças (SOMENTE confirmadas pelo professor) ----
+      const evento = await Evento.findById(eventoId).lean();
+      if (!evento || !Array.isArray(evento.presencas)) {
+        return res.status(404).json({ message: "Evento não encontrado ou sem presenças" });
+      }
+
+      const emailsConfirmados = evento.presencas
+        .filter(p => p && p.confirmadoProfessor === true && typeof p.email === "string")
+        .map(p => p.email);
+
+      if (emailsConfirmados.length === 0) {
+        return res.status(200).json({ message: "Nenhum usuário confirmado pelo professor" });
+      }
+
+      const usuarios = await Usuario.find({ email: { $in: emailsConfirmados } }).lean();
+
+      // ---- Agrupar por faixa (mantém o mesmo comportamento) ----
       const porFaixa = {};
       for (const u of usuarios) {
         const faixa = u.corFaixa || "Sem Faixa";
         if (!porFaixa[faixa]) porFaixa[faixa] = [];
         porFaixa[faixa].push(u);
       }
-
-      const filas = ["A", "B"];     // ajuste se quiser mais filas
-      const cones = [1, 2, 3];      // ajuste se quiser mais cones
-      const totalComb = filas.length * cones.length;
 
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet("Organização");
@@ -246,12 +280,13 @@ class RelatorioController {
         // 1) Agrupar por academia
         const porAcademia = new Map();
         for (const u of lista) {
+          // use o campo que vc guarda no banco; mantendo "academia" como no seu código atual
           const acad = u.academia || "Sem Academia";
           if (!porAcademia.has(acad)) porAcademia.set(acad, []);
           porAcademia.get(acad).push(u);
         }
 
-        // 2) Ordenar cada academia por altura crescente (empate: nome)
+        // 2) Ordenar cada academia por altura crescente (empate por nome)
         for (const [acad, arr] of porAcademia.entries()) {
           arr.sort((a, b) => {
             const ha = alturaToCm(a.altura);
@@ -261,21 +296,20 @@ class RelatorioController {
           });
         }
 
-        // 3) Ordenar as academias por nome e concatenar, mantendo cada bloco junto
+        // 3) Ordenar academias por nome e concatenar mantendo blocos
         const academiasOrdenadas = Array.from(porAcademia.keys()).sort((a, b) =>
           a.localeCompare(b)
         );
-
         const ordenado = [];
         for (const acad of academiasOrdenadas) {
           ordenado.push(...porAcademia.get(acad));
         }
 
-        // 4) Distribuir cone/fila/chamada sobre a lista concatenada (sem reiniciar por academia)
+        // 4) Distribuir Cone/Fila/Chamada na lista toda (sem reiniciar por academia)
         for (let pos = 0; pos < ordenado.length; pos++) {
           const u = ordenado[pos];
 
-          const index = pos % totalComb;
+          const index = pos % totalComb;                  // posição dentro do bloco de combinações
           const chamadaAtual = Math.floor(pos / totalComb) + 1;
 
           const coneIndex = Math.floor(index / filas.length) % cones.length;
@@ -302,7 +336,7 @@ class RelatorioController {
       );
       res.setHeader(
         "Content-Disposition",
-        'attachment; filename="relatorio-organizado.xlsx"'
+        `attachment; filename="relatorio-organizado-${eventoId}.xlsx"`
       );
 
       await workbook.xlsx.write(res);

@@ -4,12 +4,20 @@ import RelatorioController from "../controllers/relatorioController.js";
 
 const router = express.Router();
 
-router.get("/relatorios/organizacao", RelatorioController.gerarFilaEConeParaExame);
+// Geração da organização por evento (com cones e filas dinâmicos)
+router.get(
+  "/relatorios/organizacao/:eventoId",
+  RelatorioController.gerarFilaEConeParaExame
+);
 
-// Nova rota para gerar relatório de exame baseado no evento
-router.get("/relatorios/exame/:eventoId", RelatorioController.gerarRelatorioExamePorEvento);
+router.get(
+  "/relatorios/exame/:eventoId",
+  RelatorioController.gerarRelatorioExamePorEvento
+);
 
-router.get("/relatorios/primeira-infancia/:eventoId", RelatorioController.gerarRelatorioPrimeiraInfanciaPorEvento);
-
+router.get(
+  "/relatorios/primeira-infancia/:eventoId",
+  RelatorioController.gerarRelatorioPrimeiraInfanciaPorEvento
+);
 
 export default router;
