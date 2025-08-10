@@ -213,151 +213,179 @@ class RelatorioController {
   }
 
   static async gerarFilaEConeParaExame(req, res) {
-  try {
-    const { eventoId } = req.params;
+    try {
+      const { eventoId } = req.params;
 
-    // 🔍 DEBUG: Recebendo parâmetros da query
-    // Exemplo de URL: /gerar-fila-cone/123?ateCone=5&ateFila=C
-    const ateCone = Number(req.query.ateCone || 3);
-    const ateFila = String(req.query.ateFila || "B").toUpperCase();
-    console.log("Parâmetros recebidos:", {
-      ateConeOriginal: req.query.ateCone,
-      ateFilaOriginal: req.query.ateFila,
-      ateConeFinal: ateCone,
-      ateFilaFinal: ateFila
-    });
+      // Parâmetros de query (?ateCone=3&ateFila=C)
+      const ateCone = Number(req.query.ateCone || 3);
+      const ateFila = String(req.query.ateFila || "B").toUpperCase();
+      console.log("Parâmetros recebidos:", {
+        ateConeOriginal: req.query.ateCone,
+        ateFilaOriginal: req.query.ateFila,
+        ateConeFinal: ateCone,
+        ateFilaFinal: ateFila
+      });
 
-    // 🔍 Validação de eventoId
-    if (!eventoId) {
-      return res.status(400).json({ message: "Parâmetro eventoId é obrigatório" });
-    }
-
-    // 🔍 Validação de ateCone — pode estar caindo aqui se o query param for string inválida
-    if (!Number.isFinite(ateCone) || ateCone < 1) {
-      return res.status(400).json({ message: "Parâmetro ateCone inválido" });
-    }
-
-    // 🔍 Validação de ateFila — garante que é uma letra única
-    if (!/^[A-Z]$/.test(ateFila)) {
-      return res.status(400).json({ message: "Parâmetro ateFila deve ser uma letra (A..Z)" });
-    }
-
-    // 🔍 Geração de cones e filas com base nos parâmetros
-    const cones = Array.from({ length: ateCone }, (_, i) => i + 1); // [1..ateCone]
-    const filas = Array.from(
-      { length: ateFila.charCodeAt(0) - "A".charCodeAt(0) + 1 },
-      (_, i) => String.fromCharCode("A".charCodeAt(0) + i)
-    ); // ["A"..ateFila]
-    console.log("Cones gerados:", cones, "Filas geradas:", filas);
-
-    const totalComb = filas.length * cones.length;
-    console.log("Total de combinações:", totalComb);
-
-    // ---- Evento e presenças (SOMENTE confirmadas pelo professor) ----
-    const evento = await Evento.findById(eventoId).lean();
-    if (!evento || !Array.isArray(evento.presencas)) {
-      return res.status(404).json({ message: "Evento não encontrado ou sem presenças" });
-    }
-
-    // 🔍 Filtrando apenas os confirmados pelo professor
-    const emailsConfirmados = evento.presencas
-      .filter(p => p && p.confirmadoProfessor === true && typeof p.email === "string")
-      .map(p => p.email);
-    console.log("Emails confirmados:", emailsConfirmados);
-
-    if (emailsConfirmados.length === 0) {
-      return res.status(200).json({ message: "Nenhum usuário confirmado pelo professor" });
-    }
-
-    const usuarios = await Usuario.find({ email: { $in: emailsConfirmados } }).lean();
-    console.log("Usuários encontrados:", usuarios.length);
-
-    // ---- Agrupar por faixa ----
-    const porFaixa = {};
-    for (const u of usuarios) {
-      const faixa = u.corFaixa || "Sem Faixa";
-      if (!porFaixa[faixa]) porFaixa[faixa] = [];
-      porFaixa[faixa].push(u);
-    }
-
-    const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet("Organização");
-
-    sheet.columns = [
-      { header: "Nome", key: "nome", width: 30 },
-      { header: "Academia", key: "academia", width: 25 },
-      { header: "Faixa", key: "corFaixa", width: 15 },
-      { header: "Altura (cm)", key: "altura", width: 15 },
-      { header: "Cone", key: "cone", width: 10 },
-      { header: "Fila", key: "fila", width: 10 },
-      { header: "Chamada", key: "chamada", width: 15 },
-    ];
-
-    for (const [faixa, lista] of Object.entries(porFaixa)) {
-      // Agrupar por academia
-      const porAcademia = new Map();
-      for (const u of lista) {
-        const acad = u.academia || "Sem Academia";
-        if (!porAcademia.has(acad)) porAcademia.set(acad, []);
-        porAcademia.get(acad).push(u);
+      if (!eventoId) return res.status(400).json({ message: "Parâmetro eventoId é obrigatório" });
+      if (!Number.isFinite(ateCone) || ateCone < 1) {
+        return res.status(400).json({ message: "Parâmetro ateCone inválido" });
+      }
+      if (!/^[A-Z]$/.test(ateFila)) {
+        return res.status(400).json({ message: "Parâmetro ateFila deve ser uma letra (A..Z)" });
       }
 
-      // Ordenar por altura e nome
-      for (const [acad, arr] of porAcademia.entries()) {
-        arr.sort((a, b) => {
-          const ha = alturaToCm(a.altura);
-          const hb = alturaToCm(b.altura);
-          if (ha !== hb) return ha - hb;
-          return (a.nome || "").localeCompare(b.nome || "");
-        });
+      // Arrays de cones e filas
+      const cones = Array.from({ length: ateCone }, (_, i) => i + 1); // [1..ateCone]
+      const filas = Array.from(
+        { length: ateFila.charCodeAt(0) - "A".charCodeAt(0) + 1 },
+        (_, i) => String.fromCharCode("A".charCodeAt(0) + i)
+      ); // ["A"..ateFila]
+      console.log("Cones gerados:", cones, "Filas geradas:", filas);
+      const totalComb = filas.length * cones.length;
+
+      // Carrega evento/presenças
+      const evento = await Evento.findById(eventoId).lean();
+      if (!evento || !Array.isArray(evento.presencas)) {
+        return res.status(404).json({ message: "Evento não encontrado ou sem presenças" });
       }
 
-      // Academias ordenadas
-      const academiasOrdenadas = Array.from(porAcademia.keys()).sort((a, b) => a.localeCompare(b));
-      const ordenado = [];
-      for (const acad of academiasOrdenadas) {
-        ordenado.push(...porAcademia.get(acad));
+      // Só confirmados pelo professor
+      const emailsConfirmados = evento.presencas
+        .filter(p => p && p.confirmadoProfessor === true && typeof p.email === "string")
+        .map(p => p.email);
+
+      console.log("Emails confirmados:", emailsConfirmados);
+
+      if (emailsConfirmados.length === 0) {
+        return res.status(200).json({ message: "Nenhum usuário confirmado pelo professor" });
       }
 
-      // 🔍 Distribuição Cone/Fila — é aqui que os parâmetros realmente são usados
-      for (let pos = 0; pos < ordenado.length; pos++) {
-        const u = ordenado[pos];
-        const index = pos % totalComb;
-        const chamadaAtual = Math.floor(pos / totalComb) + 1;
-        const coneIndex = Math.floor(index / filas.length) % cones.length;
-        const filaIndex = index % filas.length;
+      const usuarios = await Usuario.find({ email: { $in: emailsConfirmados } }).lean();
+      console.log("Usuários encontrados:", usuarios.length);
 
-        const cone = cones[coneIndex];
-        const fila = filas[filaIndex];
-
-        sheet.addRow({
-          nome: u.nome,
-          academia: u.academia || "",
-          corFaixa: faixa,
-          altura: u.altura ?? "",
-          cone,
-          fila,
-          chamada: `Chamada ${chamadaAtual}`,
-        });
+      // Agrupar por faixa
+      const porFaixa = {};
+      for (const u of usuarios) {
+        const faixa = u.corFaixa || "Sem Faixa";
+        if (!porFaixa[faixa]) porFaixa[faixa] = [];
+        porFaixa[faixa].push(u);
       }
+
+      // Mapa de atribuições para atualizar o evento depois
+      // { [email]: { cone: "1", fila: "A", chamada: "Chamada 1" } }
+      const atribuicoes = Object.create(null);
+
+      // Workbook
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet("Organização");
+      sheet.columns = [
+        { header: "Nome", key: "nome", width: 30 },
+        { header: "Academia", key: "academia", width: 25 },
+        { header: "Faixa", key: "corFaixa", width: 15 },
+        { header: "Altura (cm)", key: "altura", width: 15 },
+        { header: "Cone", key: "cone", width: 10 },
+        { header: "Fila", key: "fila", width: 10 },
+        { header: "Chamada", key: "chamada", width: 15 },
+      ];
+
+      for (const [faixa, lista] of Object.entries(porFaixa)) {
+        // 1) por academia
+        const porAcademia = new Map();
+        for (const u of lista) {
+          const acad = u.academia || "Sem Academia";
+          if (!porAcademia.has(acad)) porAcademia.set(acad, []);
+          porAcademia.get(acad).push(u);
+        }
+
+        // 2) ordenar cada academia (altura -> nome)
+        for (const [, arr] of porAcademia.entries()) {
+          arr.sort((a, b) => {
+            const ha = alturaToCm(a.altura);
+            const hb = alturaToCm(b.altura);
+            if (ha !== hb) return ha - hb;
+            return (a.nome || "").localeCompare(b.nome || "");
+          });
+        }
+
+        // 3) academias ordenadas e concatenadas
+        const academiasOrdenadas = Array.from(porAcademia.keys()).sort((a, b) => a.localeCompare(b));
+        const ordenado = [];
+        for (const acad of academiasOrdenadas) ordenado.push(...porAcademia.get(acad));
+
+        // 4) distribuir e registrar atribuições
+        for (let pos = 0; pos < ordenado.length; pos++) {
+          const u = ordenado[pos];
+          const index = pos % totalComb;
+          const chamadaAtual = Math.floor(pos / totalComb) + 1;
+
+          const coneIndex = Math.floor(index / filas.length) % cones.length;
+          const filaIndex = index % filas.length;
+
+          const cone = String(cones[coneIndex]); // schema usa String
+          const fila = filas[filaIndex];
+          const chamada = `Chamada ${chamadaAtual}`;
+
+          // planilha
+          sheet.addRow({
+            nome: u.nome,
+            academia: u.academia || "",
+            corFaixa: faixa,
+            altura: u.altura ?? "",
+            cone,
+            fila,
+            chamada,
+          });
+
+          // 🔧 guardar para atualizar o evento
+          if (u.email) {
+            atribuicoes[u.email] = { cone, fila, chamada };
+          }
+        }
+      }
+
+      // 🔧 Atualiza o evento no banco com cone/fila/chamada nas presenças confirmadas
+      const novasPresencas = (evento.presencas || []).map(p => {
+        if (p && p.confirmadoProfessor === true && p.email && atribuicoes[p.email]) {
+          const { cone, fila, chamada } = atribuicoes[p.email];
+          return {
+            ...p,
+            cone,
+            fila,
+            chamada,
+          };
+        }
+        return p;
+      });
+
+      // salva e já pega a versão atualizada se quiser logar/usar
+      const eventoAtualizado = await Evento.findByIdAndUpdate(
+        eventoId,
+        { $set: { presencas: novasPresencas } },
+        { new: true }
+      ).lean();
+
+      console.log("Evento atualizado com atribuições:", {
+        id: eventoId,
+        totalPresencas: eventoAtualizado?.presencas?.length
+      });
+
+      // Resposta: arquivo XLSX
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="relatorio-organizado-${eventoId}.xlsx"`
+      );
+
+      await workbook.xlsx.write(res);
+      res.status(200).end();
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: `${error.message} - Erro ao gerar relatório` });
     }
-
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="relatorio-organizado-${eventoId}.xlsx"`
-    );
-
-    await workbook.xlsx.write(res);
-    res.status(200).end();
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: `${error.message} - Erro ao gerar relatório` });
   }
-}
 
 }
 

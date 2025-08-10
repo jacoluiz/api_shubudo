@@ -14,7 +14,10 @@ const dateSchema = new mongoose.Schema({
     type: [{
       email: { type: String, required: true },
       confirmadoProfessor: { type: Boolean, default: false },
-      academia: { type: String, required: true }
+      academia: { type: String, required: true },
+      cone: { type: String },
+      fila: { type: String },
+      chamada: { type: String },
     }],
     default: []
   }
