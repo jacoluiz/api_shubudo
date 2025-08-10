@@ -105,7 +105,6 @@ class RelatorioController {
     }
   }
 
-
   static async gerarRelatorioExamePorEvento(req, res) {
     try {
       const { eventoId } = req.params;
@@ -343,16 +342,26 @@ class RelatorioController {
         }
       }
 
-      // 🔧 Atualiza o evento no banco com cone/fila/chamada nas presenças confirmadas
+      // 🔧 Atualiza o evento no banco com cone/fila/chamada
       const novasPresencas = (evento.presencas || []).map(p => {
-        if (p && p.confirmadoProfessor === true && p.email && atribuicoes[p.email]) {
-          const { cone, fila, chamada } = atribuicoes[p.email];
-          return {
-            ...p,
-            cone,
-            fila,
-            chamada,
-          };
+        if (p && typeof p.confirmadoProfessor === "boolean") {
+          if (p.confirmadoProfessor === true && p.email && atribuicoes[p.email]) {
+            const { cone, fila, chamada } = atribuicoes[p.email];
+            return {
+              ...p,
+              cone,
+              fila,
+              chamada,
+            };
+          } else {
+            // Quando confirmadoProfessor for false -> limpa os campos
+            return {
+              ...p,
+              cone: "",
+              fila: "",
+              chamada: "",
+            };
+          }
         }
         return p;
       });
