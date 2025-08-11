@@ -40,6 +40,7 @@ const usuarioSchema = new mongoose.Schema({
             defesaDeArma: { type: String },
             saidaDeEstrangulamento: { type: String },
             tecnicasDeChao: { type: String },
+            aprovado: { type: Boolean },
         }],
         default: []
     }
