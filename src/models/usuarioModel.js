@@ -22,7 +22,8 @@ const usuarioSchema = new mongoose.Schema({
     professorEm: { type: [String], default: [] },
     notas: {
         type: [{
-            evento: { type: String },
+            nomeEvento: { type: String },
+            dataEvento: { type: String },
             faixaAvaliada: { type: String },
             avaliador: { type: String },
             atquesDeMao: { type: String },
