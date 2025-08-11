@@ -26,7 +26,7 @@ const usuarioSchema = new mongoose.Schema({
             dataEvento: { type: String },
             faixaAvaliada: { type: String },
             avaliador: { type: String },
-            atquesDeMao: { type: String },
+            ataquesDeMao: { type: String },
             defesas: { type: String },
             chutes: { type: String },
             defesaPessoal: { type: String },
